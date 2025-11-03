@@ -1,0 +1,3418 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terrain Editor Pro - Professional 3D Landscape Design</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --primary-light: #3b82f6;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --dark: #0f172a;
+            --dark-light: #1e293b;
+            --dark-lighter: #334155;
+            --gray: #64748b;
+            --gray-light: #94a3b8;
+            --border: #334155;
+            --text: #f1f5f9;
+            --text-muted: #cbd5e1;
+            --bg-panel: rgba(15, 23, 42, 0.98);
+            --bg-hover: rgba(30, 41, 59, 0.98);
+            --shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            overflow: hidden;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: var(--text);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        canvas {
+            display: block;
+            cursor: crosshair;
+        }
+
+        /* ===== TOP BAR ===== */
+        .top-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 56px;
+            background: var(--bg-panel);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 1000;
+            box-shadow: var(--shadow);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+            font-size: 18px;
+            color: var(--text);
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .top-menu {
+            display: flex;
+            gap: 8px;
+        }
+
+        .menu-item {
+            padding: 8px 16px;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: var(--radius-sm);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+            font-weight: 500;
+            position: relative;
+        }
+
+        .menu-item:hover {
+            background: var(--bg-hover);
+            color: var(--text);
+            border-color: var(--border);
+        }
+
+        .menu-item.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            min-width: 200px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow);
+            display: none;
+            z-index: 1001;
+            overflow: hidden;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-item:hover {
+            background: var(--bg-hover);
+        }
+
+        .dropdown-item-icon {
+            width: 20px;
+            text-align: center;
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: var(--primary-light);
+            min-width: 40px;
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            position: absolute;
+            left: 0;
+            top: 56px;
+            bottom: 0;
+            width: 80px;
+            background: var(--bg-panel);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px 0;
+            gap: 8px;
+            z-index: 999;
+            transition: width 0.3s;
+        }
+
+        .sidebar.expanded {
+            width: 320px;
+        }
+
+        .tool-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 24px;
+            border: 2px solid transparent;
+            position: relative;
+        }
+
+        .tool-icon:hover {
+            background: var(--bg-hover);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .tool-icon.active {
+            background: var(--primary);
+            border-color: var(--primary-light);
+            box-shadow: 0 0 20px rgba(37, 99, 235, 0.5);
+        }
+
+        .tool-tooltip {
+            position: absolute;
+            left: 70px;
+            background: var(--dark);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 1002;
+        }
+
+        .tool-icon:hover .tool-tooltip {
+            opacity: 1;
+        }
+
+        /* ===== PROPERTIES PANEL ===== */
+        .properties-panel {
+            position: absolute;
+            left: 80px;
+            top: 56px;
+            bottom: 0;
+            width: 320px;
+            background: var(--bg-panel);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            overflow-x: hidden;
+            z-index: 998;
+            transform: translateX(-100%);
+            transition: transform 0.3s;
+        }
+
+        .properties-panel.show {
+            transform: translateX(0);
+        }
+
+        .panel-section {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .panel-section:last-child {
+            border-bottom: none;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-collapse {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+
+        .section-header.collapsed .section-collapse {
+            transform: rotate(-90deg);
+        }
+
+        .section-content {
+            display: grid;
+            gap: 16px;
+        }
+
+        .section-header.collapsed + .section-content {
+            display: none;
+        }
+
+        .control-group {
+            display: grid;
+            gap: 8px;
+        }
+
+        .control-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .control-value {
+            font-weight: 600;
+            color: var(--primary-light);
+        }
+
+        .slider-container {
+            position: relative;
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--dark-lighter);
+            outline: none;
+            -webkit-appearance: none;
+            position: relative;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+            transition: all 0.2s;
+        }
+
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.6);
+        }
+
+        .slider::-webkit-slider-thumb:active {
+            transform: scale(0.95);
+        }
+
+        .slider-track {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 6px;
+            background: var(--primary);
+            border-radius: 3px;
+            pointer-events: none;
+            transition: width 0.1s;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--dark-light);
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 13px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .btn:hover {
+            background: var(--dark-lighter);
+            border-color: var(--primary);
+            transform: translateY(-1px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn.active {
+            background: var(--primary);
+            border-color: var(--primary-light);
+            box-shadow: 0 0 12px rgba(37, 99, 235, 0.4);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            border-color: var(--primary-dark);
+        }
+
+        .btn-success {
+            background: var(--secondary);
+            border-color: var(--secondary);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            border-color: var(--danger);
+            color: white;
+        }
+
+        .texture-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .texture-btn {
+            aspect-ratio: 1;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--dark-light);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .texture-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, transparent 0%, rgba(37, 99, 235, 0.1) 100%);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .texture-btn:hover::before {
+            opacity: 1;
+        }
+
+        .texture-btn:hover {
+            border-color: var(--primary);
+            transform: scale(1.05);
+        }
+
+        .texture-btn.active {
+            border-color: var(--primary-light);
+            background: var(--primary);
+            box-shadow: 0 0 16px rgba(37, 99, 235, 0.5);
+        }
+
+        .texture-name {
+            position: absolute;
+            bottom: 4px;
+            font-size: 9px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .color-picker-wrapper {
+            position: relative;
+        }
+
+        .color-picker {
+            width: 100%;
+            height: 40px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .color-picker:hover {
+            border-color: var(--primary);
+        }
+
+        .toggle-switch {
+            width: 48px;
+            height: 24px;
+            background: var(--dark-lighter);
+            border-radius: 12px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid var(--border);
+        }
+
+        .toggle-switch.active {
+            background: var(--primary);
+            border-color: var(--primary-light);
+        }
+
+        .toggle-knob {
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            transition: all 0.3s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .toggle-switch.active .toggle-knob {
+            left: 26px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--dark-light);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text);
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .input-group {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 8px;
+        }
+
+        /* ===== MINIMAP ===== */
+        .minimap-container {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 280px;
+            height: 280px;
+            background: var(--bg-panel);
+            backdrop-filter: blur(20px);
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            z-index: 997;
+            transition: all 0.3s;
+        }
+
+        .minimap-container.hidden {
+            transform: translateY(calc(100% + 40px));
+        }
+
+        .minimap-header {
+            padding: 12px 16px;
+            background: var(--dark-light);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .minimap-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .minimap-controls {
+            display: flex;
+            gap: 4px;
+        }
+
+        .minimap-btn {
+            width: 24px;
+            height: 24px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .minimap-btn:hover {
+            background: var(--dark-lighter);
+            color: var(--text);
+        }
+
+        .minimap-canvas-wrapper {
+            width: 100%;
+            height: calc(100% - 48px);
+            position: relative;
+            background: var(--dark);
+        }
+
+        #minimap-canvas {
+            width: 100%;
+            height: 100%;
+            image-rendering: pixelated;
+        }
+
+        .minimap-legend {
+            position: absolute;
+            bottom: 8px;
+            left: 8px;
+            right: 8px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 4px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        /* ===== LAYERS PANEL ===== */
+        .layers-panel {
+            position: absolute;
+            right: 0;
+            top: 56px;
+            bottom: 0;
+            width: 320px;
+            background: var(--bg-panel);
+            backdrop-filter: blur(20px);
+            border-left: 1px solid var(--border);
+            overflow-y: auto;
+            z-index: 998;
+            transform: translateX(100%);
+            transition: transform 0.3s;
+        }
+
+        .layers-panel.show {
+            transform: translateX(0);
+        }
+
+        .layers-header {
+            padding: 16px 20px;
+            background: var(--dark-light);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .layers-list {
+            padding: 12px;
+        }
+
+        .layer-item {
+            background: var(--dark-light);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 12px;
+            margin-bottom: 8px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .layer-item:hover {
+            border-color: var(--primary);
+            background: var(--dark-lighter);
+        }
+
+        .layer-item.active {
+            border-color: var(--primary-light);
+            background: var(--primary);
+            box-shadow: 0 0 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .layer-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .layer-name {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .layer-controls {
+            display: flex;
+            gap: 4px;
+        }
+
+        .layer-btn {
+            width: 28px;
+            height: 28px;
+            border: 1px solid var(--border);
+            background: var(--dark);
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .layer-btn:hover {
+            background: var(--dark-lighter);
+            border-color: var(--primary);
+        }
+
+        .layer-info {
+            display: flex;
+            gap: 12px;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* ===== TOAST NOTIFICATIONS ===== */
+        .toast-container {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 1003;
+            pointer-events: none;
+        }
+
+        .toast {
+            background: var(--bg-panel);
+            backdrop-filter: blur(20px);
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: var(--shadow);
+            animation: slideUp 0.3s ease;
+            min-width: 300px;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .toast-icon {
+            font-size: 20px;
+        }
+
+        .toast-message {
+            flex: 1;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .toast.success {
+            border-color: var(--secondary);
+        }
+
+        .toast.error {
+            border-color: var(--danger);
+        }
+
+        .toast.warning {
+            border-color: var(--warning);
+        }
+
+        /* ===== CONTEXT MENU ===== */
+        .context-menu {
+            position: absolute;
+            background: var(--bg-panel);
+            backdrop-filter: blur(20px);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow);
+            display: none;
+            z-index: 1004;
+            min-width: 200px;
+            overflow: hidden;
+        }
+
+        .context-menu.show {
+            display: block;
+        }
+
+        .context-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .context-item:last-child {
+            border-bottom: none;
+        }
+
+        .context-item:hover {
+            background: var(--bg-hover);
+        }
+
+        .context-item.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .context-item.disabled:hover {
+            background: transparent;
+        }
+
+        /* ===== LOADING OVERLAY ===== */
+        .loading-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1005;
+        }
+
+        .loading-overlay.show {
+            display: flex;
+        }
+
+        .loader {
+            width: 60px;
+            height: 60px;
+            border: 4px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--dark);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--dark-lighter);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--gray);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1280px) {
+            .properties-panel, .layers-panel {
+                width: 280px;
+            }
+            .minimap-container {
+                width: 220px;
+                height: 220px;
+            }
+        }
+
+        /* ===== CURSOR INDICATOR ===== */
+        .brush-cursor {
+            position: absolute;
+            border: 2px solid var(--primary);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 996;
+            display: none;
+            box-shadow: 0 0 20px rgba(37, 99, 235, 0.5);
+            background: radial-gradient(circle, rgba(37, 99, 235, 0.2) 0%, transparent 70%);
+        }
+
+        .brush-cursor.active {
+            display: block;
+        }
+
+        /* ===== PRECISION GRID ===== */
+        .grid-overlay {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 995;
+            display: none;
+        }
+
+        .grid-overlay.show {
+            display: block;
+            background-image: 
+                linear-gradient(rgba(37, 99, 235, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(37, 99, 235, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container">
+        <canvas></canvas>
+    </div>
+
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <div class="logo">
+            <div class="logo-icon">🏔️</div>
+            <span>Terrain Editor Pro</span>
+        </div>
+        
+        <div class="top-menu">
+            <div class="menu-item" id="file-menu">
+                Archivo
+                <div class="dropdown-menu" id="file-dropdown">
+                    <div class="dropdown-item" data-action="fullscreen">
+                        <span class="dropdown-item-icon">⛶</span>
+                        Pantalla Completa
+                    </div>
+                    <div class="dropdown-item" data-action="load-glb">
+                        <span class="dropdown-item-icon">📁</span>
+                        Cargar GLB
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stats-bar">
+            <div class="stat-item">
+                <span>FPS:</span>
+                <span class="stat-value" id="fps">60</span>
+            </div>
+            <div class="stat-item">
+                <span>Objetos:</span>
+                <span class="stat-value" id="objects">0</span>
+            </div>
+            <div class="stat-item">
+                <span>Vértices:</span>
+                <span class="stat-value" id="vertices">0</span>
+            </div>
+            <div class="stat-item">
+                <span>Memoria:</span>
+                <span class="stat-value" id="memory">0 MB</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="tool-icon active" data-tool="sculpt" title="Esculpir">
+            🗿
+            <div class="tool-tooltip">Esculpir (1)</div>
+        </div>
+        <div class="tool-icon" data-tool="paint" title="Pintar">
+            🎨
+            <div class="tool-tooltip">Pintar (2)</div>
+        </div>
+        <div class="tool-icon" data-tool="vegetation" title="Vegetación">
+            🌲
+            <div class="tool-tooltip">Vegetación (3)</div>
+        </div>
+        <div class="tool-icon" data-tool="water" title="Agua">
+            💧
+            <div class="tool-tooltip">Agua (4)</div>
+        </div>
+        <div class="tool-icon" data-tool="road" title="Carreteras">
+            🛣️
+            <div class="tool-tooltip">Carreteras (5)</div>
+        </div>
+        <div class="tool-icon" data-tool="objects" title="Objetos">
+            📦
+            <div class="tool-tooltip">Objetos (6)</div>
+        </div>
+        <div class="tool-icon" data-tool="measure" title="Medir">
+            📏
+            <div class="tool-tooltip">Medir (7)</div>
+        </div>
+        <div class="tool-icon" data-tool="environment" title="Entorno">
+            ☀️
+            <div class="tool-tooltip">Entorno (8)</div>
+        </div>
+    </div>
+
+    <!-- Properties Panel -->
+    <div class="properties-panel show" id="properties-panel">
+        <!-- Sculpt Properties -->
+        <div class="panel-section" id="sculpt-props">
+            <div class="section-header">
+                <div class="section-title">
+                    🗿 Herramientas de Esculpido
+                </div>
+                <div class="section-collapse">▼</div>
+            </div>
+            <div class="section-content">
+                <div class="button-group">
+                    <button class="btn active" data-sculpt="raise">⬆️ Elevar</button>
+                    <button class="btn" data-sculpt="lower">⬇️ Rebajar</button>
+                    <button class="btn" data-sculpt="flatten">➖ Aplanar</button>
+                    <button class="btn" data-sculpt="smooth">〰️ Suavizar</button>
+                    <button class="btn" data-sculpt="noise">🎲 Ruido</button>
+                    <button class="btn" data-sculpt="terrace">🏔️ Terrazas</button>
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Radio del Pincel</span>
+                        <span class="control-value" id="brush-radius-val">15</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="brush-radius" min="1" max="100" value="15">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Intensidad</span>
+                        <span class="control-value" id="brush-intensity-val">0.5</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="brush-intensity" min="0.1" max="3" step="0.1" value="0.5">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Dureza del Pincel</span>
+                        <span class="control-value" id="brush-hardness-val">0.5</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="brush-hardness" min="0" max="1" step="0.1" value="0.5">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Suavizado</span>
+                        <span class="control-value" id="brush-smooth-val">3</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="brush-smooth" min="0" max="10" value="3">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">
+                        <span>Simetría</span>
+                        <div class="toggle-switch" id="symmetry-toggle">
+                            <div class="toggle-knob"></div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Paint Properties -->
+        <div class="panel-section" id="paint-props" style="display: none;">
+            <div class="section-header">
+                <div class="section-title">
+                    🎨 Herramientas de Pintado
+                </div>
+                <div class="section-collapse">▼</div>
+            </div>
+            <div class="section-content">
+                <div class="control-label">Texturas Disponibles</div>
+                <div class="texture-grid">
+                    <div class="texture-btn active" data-texture="grass">
+                        🟢
+                        <div class="texture-name">Pasto</div>
+                    </div>
+                    <div class="texture-btn" data-texture="dirt">
+                        🟤
+                        <div class="texture-name">Tierra</div>
+                    </div>
+                    <div class="texture-btn" data-texture="stone">
+                        ⚪
+                        <div class="texture-name">Piedra</div>
+                    </div>
+                    <div class="texture-btn" data-texture="sand">
+                        🟡
+                        <div class="texture-name">Arena</div>
+                    </div>
+                    <div class="texture-btn" data-texture="snow">
+                        ❄️
+                        <div class="texture-name">Nieve</div>
+                    </div>
+                    <div class="texture-btn" data-texture="rock">
+                        🪨
+                        <div class="texture-name">Roca</div>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Opacidad</span>
+                        <span class="control-value" id="paint-opacity-val">1.0</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="paint-opacity" min="0.1" max="1" step="0.1" value="1">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Mezcla</span>
+                        <span class="control-value" id="paint-blend-val">0.5</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="paint-blend" min="0" max="1" step="0.1" value="0.5">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vegetation Properties -->
+        <div class="panel-section" id="vegetation-props" style="display: none;">
+            <div class="section-header">
+                <div class="section-title">
+                    🌲 Vegetación
+                </div>
+                <div class="section-collapse">▼</div>
+            </div>
+            <div class="section-content">
+                <div class="button-group">
+                    <button class="btn active" data-veg="tree">🌲 Árbol</button>
+                    <button class="btn" data-veg="bush">🌳 Arbusto</button>
+                    <button class="btn" data-veg="rock">🪨 Roca</button>
+                    <button class="btn" data-veg="grass">🌿 Pasto</button>
+                    <button class="btn" data-veg="flower">🌸 Flores</button>
+                    <button class="btn" data-veg="cactus">🌵 Cactus</button>
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Densidad</span>
+                        <span class="control-value" id="veg-density-val">5</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="veg-density" min="1" max="30" value="5">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Escala Mínima</span>
+                        <span class="control-value" id="veg-scale-min-val">0.5</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="veg-scale-min" min="0.1" max="2" step="0.1" value="0.5">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Escala Máxima</span>
+                        <span class="control-value" id="veg-scale-max-val">1.5</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="veg-scale-max" min="0.5" max="3" step="0.1" value="1.5">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">
+                        <span>Rotación Aleatoria</span>
+                        <div class="toggle-switch active" id="veg-random-rotation">
+                            <div class="toggle-knob"></div>
+                        </div>
+                    </label>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">
+                        <span>Seguir Pendiente</span>
+                        <div class="toggle-switch active" id="veg-follow-slope">
+                            <div class="toggle-knob"></div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Environment Properties -->
+        <div class="panel-section" id="environment-props" style="display: none;">
+            <div class="section-header">
+                <div class="section-title">
+                    ☀️ Entorno y Clima
+                </div>
+                <div class="section-collapse">▼</div>
+            </div>
+            <div class="section-content">
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Hora del Día</span>
+                        <span class="control-value" id="time-val">12:00</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="time-slider" min="0" max="24" step="0.5" value="12">
+                    </div>
+                </div>
+                
+                <div class="control-label">Clima</div>
+                <div class="button-group">
+                    <button class="btn active" data-weather="clear">☀️ Soleado</button>
+                    <button class="btn" data-weather="cloudy">☁️ Nublado</button>
+                    <button class="btn" data-weather="rain">🌧️ Lluvia</button>
+                    <button class="btn" data-weather="snow">❄️ Nieve</button>
+                    <button class="btn" data-weather="fog">🌫️ Niebla</button>
+                    <button class="btn" data-weather="storm">⛈️ Tormenta</button>
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Intensidad del Sol</span>
+                        <span class="control-value" id="sun-intensity-val">1.0</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="sun-intensity" min="0" max="2" step="0.1" value="1">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Luz Ambiental</span>
+                        <span class="control-value" id="ambient-val">0.4</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="ambient-light" min="0" max="1" step="0.1" value="0.4">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Densidad de Niebla</span>
+                        <span class="control-value" id="fog-density-val">0.002</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="fog-density" min="0" max="0.01" step="0.001" value="0.002">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">
+                        <span>Sombras</span>
+                        <div class="toggle-switch active" id="shadows-toggle">
+                            <div class="toggle-knob"></div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Water Properties -->
+        <div class="panel-section" id="water-props" style="display: none;">
+            <div class="section-header">
+                <div class="section-title">
+                    💧 Propiedades del Agua
+                </div>
+                <div class="section-collapse">▼</div>
+            </div>
+            <div class="section-content">
+                <div class="control-group">
+                    <label class="control-label">
+                        <span>Activar Agua</span>
+                        <div class="toggle-switch" id="water-toggle">
+                            <div class="toggle-knob"></div>
+                        </div>
+                    </label>
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Nivel del Agua</span>
+                        <span class="control-value" id="water-level-val">0</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="water-level" min="-20" max="30" value="0">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Transparencia</span>
+                        <span class="control-value" id="water-opacity-val">0.6</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="water-opacity" min="0.1" max="1" step="0.1" value="0.6">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-label">Tinte del Agua</div>
+                    <input type="color" class="color-picker" id="water-color" value="#1e90ff">
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Velocidad de Olas</span>
+                        <span class="control-value" id="wave-speed-val">1.0</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="wave-speed" min="0" max="3" step="0.1" value="1">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Road Properties -->
+        <div class="panel-section" id="road-props" style="display: none;">
+            <div class="section-header">
+                <div class="section-title">
+                    🛣️ Propiedades de Carreteras
+                </div>
+                <div class="section-collapse">▼</div>
+            </div>
+            <div class="section-content">
+                <div class="button-group">
+                    <button class="btn btn-primary" id="road-start">Iniciar Carretera</button>
+                    <button class="btn btn-danger" id="road-clear">Limpiar</button>
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Ancho</span>
+                        <span class="control-value" id="road-width-val">8</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="road-width" min="2" max="30" value="8">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Suavizado de Curvas</span>
+                        <span class="control-value" id="road-smooth-val">50</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="road-smooth" min="10" max="200" value="50">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Elevar sobre Terreno</span>
+                        <span class="control-value" id="road-elevation-val">0.2</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="road-elevation" min="0" max="2" step="0.1" value="0.2">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">
+                        <span>Auto-Aplanar Terreno</span>
+                        <div class="toggle-switch active" id="road-flatten">
+                            <div class="toggle-knob"></div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Layers Panel -->
+    <div class="layers-panel" id="layers-panel">
+        <div class="layers-header">
+            <div class="section-title">📚 Capas</div>
+            <button class="btn btn-sm btn-primary" id="add-layer">➕ Nueva</button>
+        </div>
+        <div class="layers-list" id="layers-list">
+            <div class="layer-item active" data-layer="0">
+                <div class="layer-header">
+                    <div class="layer-name">Capa Base</div>
+                    <div class="layer-controls">
+                        <div class="layer-btn" title="Visible">👁️</div>
+                        <div class="layer-btn" title="Bloquear">🔓</div>
+                    </div>
+                </div>
+                <div class="layer-info">
+                    <span>0 objetos</span>
+                    <span>•</span>
+                    <span>Visible</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Minimap -->
+    <div class="minimap-container" id="minimap-container">
+        <div class="minimap-header">
+            <div class="minimap-title">Mini-Mapa</div>
+            <div class="minimap-controls">
+                <button class="minimap-btn" id="minimap-refresh" title="Actualizar">🔄</button>
+                <button class="minimap-btn" id="minimap-close" title="Cerrar">✕</button>
+            </div>
+        </div>
+        <div class="minimap-canvas-wrapper">
+            <canvas id="minimap-canvas"></canvas>
+            <div class="minimap-legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #3a9d3a;"></div>
+                    <span>Pasto</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #808080;"></div>
+                    <span>Piedra</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ffffff;"></div>
+                    <span>Nieve</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #2563eb;"></div>
+                    <span>Cámara</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Brush Cursor -->
+    <div class="brush-cursor" id="brush-cursor"></div>
+
+    <!-- Grid Overlay -->
+    <div class="grid-overlay" id="grid-overlay"></div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Context Menu -->
+    <div class="context-menu" id="context-menu">
+        <div class="context-item" data-action="copy">
+            <span>📋</span> Copiar
+        </div>
+        <div class="context-item" data-action="paste">
+            <span>📄</span> Pegar
+        </div>
+        <div class="context-item" data-action="delete">
+            <span>🗑️</span> Eliminar
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loader"></div>
+    </div>
+
+    <!-- Hidden File Inputs -->
+    <input type="file" id="file-input-project" accept=".json" style="display: none;">
+    <input type="file" id="file-input-glb" accept=".glb,.gltf" style="display: none;">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // GLTFLoader inline (compatible with r128)
+        THREE.GLTFLoader = (function() {
+            function GLTFLoader(manager) {
+                this.manager = manager || THREE.DefaultLoadingManager;
+            }
+            
+            GLTFLoader.prototype = {
+                load: function(url, onLoad, onProgress, onError) {
+                    const loader = new THREE.FileLoader(this.manager);
+                    loader.setResponseType('arraybuffer');
+                    loader.load(url, (data) => {
+                        try {
+                            this.parse(data, '', onLoad, onError);
+                        } catch (e) {
+                            if (onError) onError(e);
+                        }
+                    }, onProgress, onError);
+                },
+                
+                parse: function(data, path, onLoad, onError) {
+                    try {
+                        const magic = new TextDecoder().decode(new Uint8Array(data, 0, 4));
+                        let json;
+                        
+                        if (magic === 'glTF') {
+                            const view = new DataView(data);
+                            const jsonLength = view.getUint32(12, true);
+                            const jsonData = new Uint8Array(data, 20, jsonLength);
+                            json = JSON.parse(new TextDecoder().decode(jsonData));
+                        } else {
+                            json = JSON.parse(new TextDecoder().decode(data));
+                        }
+                        
+                        const scene = new THREE.Group();
+                        scene.name = 'Scene';
+                        
+                        if (json.meshes && json.meshes.length > 0) {
+                            json.meshes.forEach((meshData, idx) => {
+                                const geometry = new THREE.BufferGeometry();
+                                const primitive = meshData.primitives[0];
+                                
+                                if (primitive && primitive.attributes) {
+                                    if (primitive.attributes.POSITION !== undefined) {
+                                        const positions = this.getAccessorData(json, primitive.attributes.POSITION, data);
+                                        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                                    }
+                                    
+                                    if (primitive.attributes.NORMAL !== undefined) {
+                                        const normals = this.getAccessorData(json, primitive.attributes.NORMAL, data);
+                                        geometry.setAttribute('normal', new THREE.BufferAttribute(normals, 3));
+                                    }
+                                    
+                                    if (primitive.indices !== undefined) {
+                                        const indices = this.getAccessorData(json, primitive.indices, data);
+                                        geometry.setIndex(new THREE.BufferAttribute(indices, 1));
+                                    }
+                                }
+                                
+                                geometry.computeVertexNormals();
+                                const material = new THREE.MeshStandardMaterial({ color: 0x888888 });
+                                const mesh = new THREE.Mesh(geometry, material);
+                                mesh.name = meshData.name || 'Mesh_' + idx;
+                                scene.add(mesh);
+                            });
+                        }
+                        
+                        if (onLoad) onLoad({ scene: scene, scenes: [scene] });
+                    } catch (e) {
+                        console.error('GLTF Parse Error:', e);
+                        if (onError) onError(e);
+                    }
+                },
+                
+                getAccessorData: function(json, accessorIdx, buffer) {
+                    const accessor = json.accessors[accessorIdx];
+                    const bufferView = json.bufferViews[accessor.bufferView];
+                    const offset = (bufferView.byteOffset || 0) + (accessor.byteOffset || 0);
+                    
+                    let TypedArray;
+                    switch (accessor.componentType) {
+                        case 5121: TypedArray = Uint8Array; break;
+                        case 5123: TypedArray = Uint16Array; break;
+                        case 5125: TypedArray = Uint32Array; break;
+                        case 5126: TypedArray = Float32Array; break;
+                        default: TypedArray = Float32Array;
+                    }
+                    
+                    const arrayLength = accessor.count * this.getTypeSize(accessor.type);
+                    return new TypedArray(buffer, offset + 20 + json.buffers[0].byteLength, arrayLength);
+                },
+                
+                getTypeSize: function(type) {
+                    switch (type) {
+                        case 'SCALAR': return 1;
+                        case 'VEC2': return 2;
+                        case 'VEC3': return 3;
+                        case 'VEC4': return 4;
+                        default: return 1;
+                    }
+                }
+            };
+            
+            return GLTFLoader;
+        })();
+    </script>
+    <script>
+        // ===== VARIABLES GLOBALES =====
+        let scene, camera, renderer, terrain, water, sunLight;
+        let currentTool = 'sculpt';
+        let currentSculptMode = 'raise';
+        let currentTexture = 'grass';
+        let currentVegetation = 'tree';
+        let brushRadius = 15;
+        let brushIntensity = 0.5;
+        let brushHardness = 0.5;
+        let brushSmooth = 3;
+        let isEditing = false;
+        let isSymmetryEnabled = false;
+        let raycaster = new THREE.Raycaster();
+        let mouse = new THREE.Vector2();
+        let mouseWorldPosition = new THREE.Vector3();
+        let history = [];
+        let historyIndex = -1;
+        let roadPoints = [];
+        let roadMesh = null;
+        let roadActive = false;
+        let layers = [];
+        let currentLayer = 0;
+        let vegetation = [];
+        let particles = [];
+        let timeOfDay = 12;
+        let weather = 'clear';
+        let waterLevel = 0;
+        let waterActive = false;
+        let shadowsEnabled = true;
+        let gridEnabled = false;
+        let minimapVisible = true;
+        let importedModel = null;
+        let gltfLoader = null;
+
+        // Performance tracking
+        let fps = 0;
+        let lastTime = performance.now();
+        let frames = 0;
+        let lastMinimapUpdate = 0;
+
+        // Camera control
+        let cameraDistance = 80;
+        let cameraAngle = 0;
+        let cameraHeight = 50;
+        let cameraTarget = new THREE.Vector3(0, 0, 0);
+        let isDragging = false;
+        let previousMousePosition = { x: 0, y: 0 };
+
+        // Texture colors
+        const textureColors = {
+            grass: 0x3a9d3a,
+            dirt: 0x8b4513,
+            stone: 0x808080,
+            sand: 0xf4a460,
+            snow: 0xffffff,
+            rock: 0x696969
+        };
+
+        // ===== INICIALIZACIÓN =====
+        function init() {
+            const container = document.getElementById('canvas-container');
+            const canvas = container.querySelector('canvas');
+
+            // Scene
+            scene = new THREE.Scene();
+            updateSkyColor();
+
+            // Camera
+            camera = new THREE.PerspectiveCamera(
+                60,
+                window.innerWidth / window.innerHeight,
+                0.1,
+                1000
+            );
+            updateCameraPosition();
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ 
+                canvas: canvas,
+                antialias: true,
+                alpha: false
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.2;
+
+            // Initialize GLTF Loader
+            gltfLoader = new THREE.GLTFLoader();
+
+            setupLighting();
+            createTerrain();
+            createWater();
+            setupEventListeners();
+            initializeLayers();
+            initializeMinimap();
+            saveState();
+            animate();
+
+            showToast('✨ Editor cargado correctamente', 'success');
+        }
+
+        function setupLighting() {
+            // Ambient light
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+            ambientLight.name = 'ambientLight';
+            scene.add(ambientLight);
+
+            // Directional light (sun)
+            sunLight = new THREE.DirectionalLight(0xffffff, 1.0);
+            sunLight.position.set(50, 100, 50);
+            sunLight.castShadow = true;
+            sunLight.shadow.camera.left = -100;
+            sunLight.shadow.camera.right = 100;
+            sunLight.shadow.camera.top = 100;
+            sunLight.shadow.camera.bottom = -100;
+            sunLight.shadow.mapSize.width = 4096;
+            sunLight.shadow.mapSize.height = 4096;
+            sunLight.shadow.bias = -0.0001;
+            sunLight.name = 'sunLight';
+            scene.add(sunLight);
+
+            // Hemisphere light
+            const hemiLight = new THREE.HemisphereLight(0x87ceeb, 0x3a9d3a, 0.3);
+            scene.add(hemiLight);
+        }
+
+        function createTerrain() {
+            const size = 100;
+            const segments = 256;
+            const geometry = new THREE.PlaneGeometry(size, size, segments, segments);
+            
+            const vertices = geometry.attributes.position.array;
+            const colors = new Float32Array(vertices.length);
+            
+            // Generate procedural terrain
+            for (let i = 0; i < vertices.length; i += 3) {
+                const x = vertices[i];
+                const y = vertices[i + 1];
+                
+                // Multi-octave noise
+                const noise1 = Math.sin(x * 0.05) * Math.cos(y * 0.05) * 5;
+                const noise2 = Math.sin(x * 0.1) * Math.cos(y * 0.1) * 2.5;
+                const noise3 = Math.sin(x * 0.2) * Math.cos(y * 0.2) * 1.25;
+                
+                vertices[i + 2] = noise1 + noise2 + noise3;
+                
+                // Color based on height
+                const height = vertices[i + 2];
+                let color;
+                
+                if (height < 1) {
+                    color = new THREE.Color(0xc2b280); // Sand
+                } else if (height < 4) {
+                    color = new THREE.Color(0x3a9d3a); // Grass
+                } else if (height < 8) {
+                    color = new THREE.Color(0x808080); // Stone
+                } else {
+                    color = new THREE.Color(0xffffff); // Snow
+                }
+                
+                colors[i] = color.r;
+                colors[i + 1] = color.g;
+                colors[i + 2] = color.b;
+            }
+            
+            geometry.attributes.position.needsUpdate = true;
+            geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+            geometry.computeVertexNormals();
+
+            const material = new THREE.MeshStandardMaterial({
+                vertexColors: true,
+                roughness: 0.9,
+                metalness: 0.1,
+                flatShading: false
+            });
+
+            if (terrain) {
+                scene.remove(terrain);
+            }
+
+            terrain = new THREE.Mesh(geometry, material);
+            terrain.rotation.x = -Math.PI / 2;
+            terrain.receiveShadow = true;
+            terrain.castShadow = true;
+            scene.add(terrain);
+
+            addProceduralVegetation(30);
+        }
+
+        function createWater() {
+            const waterGeometry = new THREE.PlaneGeometry(100, 100);
+            const waterMaterial = new THREE.MeshStandardMaterial({
+                color: 0x1e90ff,
+                transparent: true,
+                opacity: 0.6,
+                roughness: 0.1,
+                metalness: 0.8,
+                envMapIntensity: 1.5
+            });
+
+            water = new THREE.Mesh(waterGeometry, waterMaterial);
+            water.rotation.x = -Math.PI / 2;
+            water.position.y = waterLevel;
+            water.visible = waterActive;
+            water.receiveShadow = true;
+            scene.add(water);
+        }
+
+        function addProceduralVegetation(count) {
+            const treeGeometry = new THREE.ConeGeometry(1, 5, 8);
+            const bushGeometry = new THREE.SphereGeometry(1.5, 8, 6);
+            const rockGeometry = new THREE.DodecahedronGeometry(1);
+            const grassGeometry = new THREE.ConeGeometry(0.3, 1.5, 4);
+
+            const treeMaterial = new THREE.MeshStandardMaterial({ color: 0x0d5c0d });
+            const bushMaterial = new THREE.MeshStandardMaterial({ color: 0x2d7a2d });
+            const rockMaterial = new THREE.MeshStandardMaterial({ color: 0x606060 });
+            const grassMaterial = new THREE.MeshStandardMaterial({ color: 0x4a9d4a });
+
+            for (let i = 0; i < count; i++) {
+                const x = (Math.random() - 0.5) * 90;
+                const z = (Math.random() - 0.5) * 90;
+                const y = getTerrainHeight(x, z);
+
+                const type = Math.random();
+                let mesh;
+
+                if (type < 0.35) {
+                    mesh = new THREE.Mesh(treeGeometry, treeMaterial);
+                    mesh.scale.set(1, 0.8 + Math.random() * 0.6, 1);
+                    mesh.userData.type = 'tree';
+                } else if (type < 0.6) {
+                    mesh = new THREE.Mesh(bushGeometry, bushMaterial);
+                    mesh.scale.set(0.7 + Math.random() * 0.4, 0.7 + Math.random() * 0.4, 0.7 + Math.random() * 0.4);
+                    mesh.userData.type = 'bush';
+                } else if (type < 0.8) {
+                    mesh = new THREE.Mesh(rockGeometry, rockMaterial);
+                    mesh.scale.set(0.5 + Math.random() * 0.8, 0.5 + Math.random() * 0.8, 0.5 + Math.random() * 0.8);
+                    mesh.userData.type = 'rock';
+                } else {
+                    mesh = new THREE.Mesh(grassGeometry, grassMaterial);
+                    mesh.scale.set(0.8, 0.8, 0.8);
+                    mesh.userData.type = 'grass';
+                }
+
+                mesh.position.set(x, y, z);
+                mesh.rotation.y = Math.random() * Math.PI * 2;
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+                scene.add(mesh);
+                vegetation.push(mesh);
+            }
+        }
+
+        function getTerrainHeight(x, z) {
+            if (!terrain) return 0;
+            
+            raycaster.set(
+                new THREE.Vector3(x, 100, z),
+                new THREE.Vector3(0, -1, 0)
+            );
+            
+            const intersects = raycaster.intersectObject(terrain);
+            return intersects.length > 0 ? intersects[0].point.y : 0;
+        }
+
+        function updateCameraPosition() {
+            const angleRad = cameraAngle * Math.PI / 180;
+            camera.position.x = Math.sin(angleRad) * cameraDistance;
+            camera.position.z = Math.cos(angleRad) * cameraDistance;
+            camera.position.y = cameraHeight;
+            camera.lookAt(cameraTarget);
+        }
+
+        function updateSkyColor() {
+            const hour = timeOfDay;
+            let color, fogNear, fogFar;
+            
+            if (hour >= 5 && hour < 7) {
+                color = new THREE.Color(0xff9966); // Dawn
+                fogNear = 40; fogFar = 200;
+            } else if (hour >= 7 && hour < 17) {
+                color = new THREE.Color(0x87ceeb); // Day
+                fogNear = 50; fogFar = 300;
+            } else if (hour >= 17 && hour < 19) {
+                color = new THREE.Color(0xff6b35); // Dusk
+                fogNear = 40; fogFar = 200;
+            } else {
+                color = new THREE.Color(0x0a0a2e); // Night
+                fogNear = 30; fogFar = 150;
+            }
+
+            scene.background = color;
+            scene.fog = new THREE.Fog(color, fogNear, fogFar);
+
+            if (sunLight) {
+                const intensity = hour >= 6 && hour < 20 ? 1.0 : 0.15;
+                sunLight.intensity = intensity;
+                
+                const sunAngle = (hour / 24) * Math.PI * 2 - Math.PI / 2;
+                sunLight.position.x = Math.cos(sunAngle) * 100;
+                sunLight.position.y = Math.sin(sunAngle) * 100;
+            }
+        }
+
+        // ===== EVENT LISTENERS =====
+        function setupEventListeners() {
+            // Tool selection
+            document.querySelectorAll('.tool-icon').forEach(icon => {
+                icon.addEventListener('click', (e) => {
+                    document.querySelectorAll('.tool-icon').forEach(i => i.classList.remove('active'));
+                    icon.classList.add('active');
+                    currentTool = icon.dataset.tool;
+                    switchToolPanel(currentTool);
+                    showToast(`Herramienta: ${icon.title}`, 'info');
+                });
+            });
+
+            // Sculpt modes
+            document.querySelectorAll('[data-sculpt]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('[data-sculpt]').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentSculptMode = btn.dataset.sculpt;
+                });
+            });
+
+            // Texture selection
+            document.querySelectorAll('.texture-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.texture-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentTexture = btn.dataset.texture;
+                });
+            });
+
+            // Vegetation selection
+            document.querySelectorAll('[data-veg]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('[data-veg]').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentVegetation = btn.dataset.veg;
+                });
+            });
+
+            // Weather buttons
+            document.querySelectorAll('[data-weather]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('[data-weather]').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    weather = btn.dataset.weather;
+                    updateWeather();
+                });
+            });
+
+            // Sliders
+            setupSlider('brush-radius', (val) => brushRadius = val);
+            setupSlider('brush-intensity', (val) => brushIntensity = val);
+            setupSlider('brush-hardness', (val) => brushHardness = val);
+            setupSlider('brush-smooth', (val) => brushSmooth = val);
+            setupSlider('time-slider', (val) => {
+                timeOfDay = val;
+                updateSkyColor();
+                const hours = Math.floor(val);
+                const minutes = Math.floor((val - hours) * 60);
+                document.getElementById('time-val').textContent = 
+                    `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+            });
+            setupSlider('water-level', (val) => {
+                waterLevel = val;
+                if (water) water.position.y = val;
+            });
+            setupSlider('water-opacity', (val) => {
+                if (water) water.material.opacity = val;
+            });
+            setupSlider('sun-intensity', (val) => {
+                if (sunLight) sunLight.intensity = val;
+            });
+            setupSlider('ambient-light', (val) => {
+                const light = scene.getObjectByName('ambientLight');
+                if (light) light.intensity = val;
+            });
+            setupSlider('veg-density', (val) => {});
+            setupSlider('veg-scale-min', (val) => {});
+            setupSlider('veg-scale-max', (val) => {});
+            setupSlider('paint-opacity', (val) => {});
+            setupSlider('paint-blend', (val) => {});
+            setupSlider('road-width', (val) => {});
+            setupSlider('road-smooth', (val) => {});
+            setupSlider('road-elevation', (val) => {});
+            setupSlider('fog-density', (val) => {
+                if (scene.fog) {
+                    scene.fog.density = val;
+                }
+            });
+
+            // Toggles
+            setupToggle('symmetry-toggle', (active) => isSymmetryEnabled = active);
+            setupToggle('water-toggle', (active) => {
+                waterActive = active;
+                if (water) water.visible = active;
+            });
+            setupToggle('shadows-toggle', (active) => {
+                shadowsEnabled = active;
+                renderer.shadowMap.enabled = active;
+            });
+            setupToggle('veg-random-rotation', (active) => {});
+            setupToggle('veg-follow-slope', (active) => {});
+            setupToggle('road-flatten', (active) => {});
+
+            // Menus
+            setupDropdownMenu('file-menu', 'file-dropdown');
+            setupDropdownMenu('edit-menu', 'edit-dropdown');
+            setupDropdownMenu('view-menu', 'view-dropdown');
+
+            // Dropdown actions
+            document.querySelectorAll('.dropdown-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const action = item.dataset.action;
+                    handleMenuAction(action);
+                    document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
+                });
+            });
+
+            // Road buttons
+            const roadStartBtn = document.getElementById('road-start');
+            const roadClearBtn = document.getElementById('road-clear');
+            
+            if (roadStartBtn) {
+                roadStartBtn.addEventListener('click', () => {
+                    roadActive = !roadActive;
+                    if (roadActive) {
+                        roadStartBtn.textContent = '⏹️ Finalizar Carretera';
+                        roadStartBtn.classList.add('active');
+                        showToast('🛣️ Modo carretera activado. Click en el terreno para añadir puntos', 'info');
+                    } else {
+                        roadStartBtn.textContent = 'Iniciar Carretera';
+                        roadStartBtn.classList.remove('active');
+                        showToast('🛣️ Modo carretera desactivado', 'info');
+                    }
+                });
+            }
+            
+            if (roadClearBtn) {
+                roadClearBtn.addEventListener('click', () => {
+                    roadPoints = [];
+                    if (roadMesh) {
+                        scene.remove(roadMesh);
+                        roadMesh = null;
+                    }
+                    roadActive = false;
+                    if (roadStartBtn) {
+                        roadStartBtn.textContent = 'Iniciar Carretera';
+                        roadStartBtn.classList.remove('active');
+                    }
+                    showToast('🗑️ Carretera eliminada', 'success');
+                });
+            }
+
+            // File inputs
+            document.getElementById('file-input-project').addEventListener('change', loadProject);
+            document.getElementById('file-input-glb').addEventListener('change', importGLB);
+
+            // Canvas interactions
+            renderer.domElement.addEventListener('mousedown', onMouseDown);
+            renderer.domElement.addEventListener('mousemove', onMouseMove);
+            renderer.domElement.addEventListener('mouseup', onMouseUp);
+            renderer.domElement.addEventListener('wheel', onMouseWheel);
+            renderer.domElement.addEventListener('contextmenu', (e) => e.preventDefault());
+
+            // Section collapse
+            document.querySelectorAll('.section-header').forEach(header => {
+                header.addEventListener('click', () => {
+                    header.classList.toggle('collapsed');
+                });
+            });
+
+            // Minimap controls
+            document.getElementById('minimap-close').addEventListener('click', () => {
+                document.getElementById('minimap-container').classList.add('hidden');
+                minimapVisible = false;
+            });
+            
+            document.getElementById('minimap-refresh').addEventListener('click', () => {
+                updateMinimap(true);
+            });
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', onKeyDown);
+
+            // Window resize
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        function setupSlider(id, callback) {
+            const slider = document.getElementById(id);
+            if (!slider) return;
+            
+            const valueSpan = document.getElementById(id + '-val');
+            
+            slider.addEventListener('input', (e) => {
+                const value = parseFloat(e.target.value);
+                if (valueSpan) valueSpan.textContent = value.toFixed(id.includes('intensity') || id.includes('opacity') ? 2 : id.includes('density') ? 3 : 1);
+                callback(value);
+            });
+        }
+
+        function setupToggle(id, callback) {
+            const toggle = document.getElementById(id);
+            if (!toggle) return;
+            
+            toggle.addEventListener('click', () => {
+                toggle.classList.toggle('active');
+                callback(toggle.classList.contains('active'));
+            });
+        }
+
+        function setupDropdownMenu(menuId, dropdownId) {
+            const menu = document.getElementById(menuId);
+            const dropdown = document.getElementById(dropdownId);
+            if (!menu || !dropdown) return;
+
+            menu.addEventListener('click', (e) => {
+                e.stopPropagation();
+                document.querySelectorAll('.dropdown-menu').forEach(m => {
+                    if (m !== dropdown) m.classList.remove('show');
+                });
+                dropdown.classList.toggle('show');
+            });
+
+            document.addEventListener('click', () => {
+                dropdown.classList.remove('show');
+            });
+        }
+
+        function switchToolPanel(tool) {
+            document.querySelectorAll('.panel-section').forEach(section => {
+                section.style.display = 'none';
+            });
+
+            const panelMap = {
+                'sculpt': 'sculpt-props',
+                'paint': 'paint-props',
+                'vegetation': 'vegetation-props',
+                'water': 'water-props',
+                'road': 'road-props',
+                'environment': 'environment-props'
+            };
+
+            const panelId = panelMap[tool];
+            if (panelId) {
+                const panel = document.getElementById(panelId);
+                if (panel) panel.style.display = 'block';
+            }
+        }
+
+        function handleMenuAction(action) {
+            switch(action) {
+                case 'new':
+                    if (confirm('¿Crear nuevo proyecto? Se perderán los cambios no guardados.')) {
+                        createTerrain();
+                        vegetation.forEach(v => scene.remove(v));
+                        vegetation = [];
+                        if (roadMesh) scene.remove(roadMesh);
+                        roadPoints = [];
+                        roadMesh = null;
+                        history = [];
+                        historyIndex = -1;
+                        saveState();
+                        showToast('🎨 Nuevo proyecto creado', 'success');
+                    }
+                    break;
+                case 'open':
+                    document.getElementById('file-input-project').click();
+                    break;
+                case 'import-glb':
+                    document.getElementById('file-input-glb').click();
+                    break;
+                case 'save':
+                    saveProject();
+                    break;
+                case 'export':
+                    exportTerrain();
+                    break;
+                case 'export-glb':
+                    exportToGLB();
+                    break;
+                case 'undo':
+                    undo();
+                    break;
+                case 'redo':
+                    redo();
+                    break;
+                case 'reset':
+                    if (confirm('¿Resetear terreno? Esta acción no se puede deshacer.')) {
+                        createTerrain();
+                        saveState();
+                        showToast('🔄 Terreno reseteado', 'success');
+                    }
+                    break;
+                case 'toggle-minimap':
+                    minimapVisible = !minimapVisible;
+                    document.getElementById('minimap-container').classList.toggle('hidden', !minimapVisible);
+                    showToast(minimapVisible ? '🗺️ Minimapa visible' : '🗺️ Minimapa oculto', 'info');
+                    break;
+                case 'toggle-grid':
+                    gridEnabled = !gridEnabled;
+                    document.getElementById('grid-overlay').classList.toggle('show', gridEnabled);
+                    showToast(gridEnabled ? '⊞ Rejilla activada' : '⊞ Rejilla desactivada', 'info');
+                    break;
+                case 'fullscreen':
+                    if (!document.fullscreenElement) {
+                        document.documentElement.requestFullscreen();
+                        showToast('⛶ Modo pantalla completa', 'info');
+                    } else {
+                        document.exitFullscreen();
+                        showToast('⛶ Salir de pantalla completa', 'info');
+                    }
+                    break;
+            }
+        }
+
+        function onMouseDown(e) {
+            if (e.button === 0) { // Left click
+                if (currentTool === 'road' && roadActive) {
+                    addRoadPointFromClick(e);
+                } else if (currentTool === 'road' && !roadActive) {
+                    showToast('⚠️ Presiona "Iniciar Carretera" primero', 'warning');
+                } else {
+                    isEditing = true;
+                    editTerrain(e);
+                }
+            } else if (e.button === 2) { // Right click
+                isDragging = true;
+            }
+            previousMousePosition = { x: e.clientX, y: e.clientY };
+        }
+
+        function onMouseMove(e) {
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+            // Update world position
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObject(terrain);
+            if (intersects.length > 0) {
+                mouseWorldPosition.copy(intersects[0].point);
+            }
+
+            if (isDragging) {
+                const deltaX = e.clientX - previousMousePosition.x;
+                const deltaY = e.clientY - previousMousePosition.y;
+
+                if (e.shiftKey) {
+                    // Pan camera
+                    const panSpeed = 0.05;
+                    const right = new THREE.Vector3();
+                    const up = new THREE.Vector3(0, 1, 0);
+                    camera.getWorldDirection(right);
+                    right.cross(up).normalize();
+                    
+                    cameraTarget.x -= right.x * deltaX * panSpeed;
+                    cameraTarget.z -= right.z * deltaX * panSpeed;
+                    cameraTarget.x += camera.getWorldDirection(new THREE.Vector3()).x * deltaY * panSpeed;
+                    cameraTarget.z += camera.getWorldDirection(new THREE.Vector3()).z * deltaY * panSpeed;
+                } else {
+                    // Rotate camera
+                    cameraAngle += deltaX * 0.5;
+                    cameraHeight = Math.max(10, Math.min(100, cameraHeight - deltaY * 0.3));
+                }
+                updateCameraPosition();
+            }
+
+            if (isEditing && currentTool !== 'road') {
+                editTerrain(e);
+            }
+
+            // Update brush cursor
+            updateBrushCursor(e);
+
+            previousMousePosition = { x: e.clientX, y: e.clientY };
+        }
+
+        function onMouseUp(e) {
+            if (e.button === 0 && isEditing) {
+                isEditing = false;
+                saveState();
+            } else if (e.button === 2) {
+                isDragging = false;
+            }
+        }
+
+        function onMouseWheel(e) {
+            e.preventDefault();
+            cameraDistance = Math.max(20, Math.min(200, cameraDistance + e.deltaY * 0.05));
+            updateCameraPosition();
+        }
+
+        function onKeyDown(e) {
+            if (e.ctrlKey || e.metaKey) {
+                if (e.key === 'z') {
+                    e.preventDefault();
+                    undo();
+                } else if (e.key === 'y') {
+                    e.preventDefault();
+                    redo();
+                } else if (e.key === 's') {
+                    e.preventDefault();
+                    saveProject();
+                }
+            }
+
+            // Tool shortcuts
+            const toolKeys = ['1', '2', '3', '4', '5', '6', '7', '8'];
+            if (toolKeys.includes(e.key)) {
+                const tools = document.querySelectorAll('.tool-icon');
+                const index = parseInt(e.key) - 1;
+                if (tools[index]) tools[index].click();
+            }
+        }
+
+        function updateBrushCursor(e) {
+            const cursor = document.getElementById('brush-cursor');
+            if (currentTool === 'sculpt' || currentTool === 'paint') {
+                cursor.classList.add('active');
+                cursor.style.left = e.clientX + 'px';
+                cursor.style.top = e.clientY + 'px';
+                cursor.style.width = (brushRadius * 2) + 'px';
+                cursor.style.height = (brushRadius * 2) + 'px';
+                cursor.style.marginLeft = (-brushRadius) + 'px';
+                cursor.style.marginTop = (-brushRadius) + 'px';
+            } else {
+                cursor.classList.remove('active');
+            }
+        }
+
+        // ===== TERRAIN EDITING =====
+        function editTerrain(e) {
+            if (!terrain) return;
+            
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObject(terrain);
+
+            if (intersects.length > 0) {
+                const point = intersects[0].point;
+
+                switch(currentTool) {
+                    case 'sculpt':
+                        sculptTerrain(point);
+                        break;
+                    case 'paint':
+                        paintTerrain(point);
+                        break;
+                    case 'vegetation':
+                        placeVegetation(point);
+                        isEditing = false; // Solo un click
+                        break;
+                }
+            }
+        }
+
+        function sculptTerrain(point) {
+            if (!terrain || !terrain.geometry) return;
+            
+            const vertices = terrain.geometry.attributes.position.array;
+            const segments = Math.sqrt(terrain.geometry.attributes.position.count) - 1;
+
+            for (let i = 0; i < vertices.length; i += 3) {
+                const vx = vertices[i];
+                const vy = vertices[i + 1];
+                const distance = Math.sqrt(Math.pow(vx - point.x, 2) + Math.pow(vy - point.z, 2));
+
+                if (distance < brushRadius) {
+                    const falloff = Math.pow(1 - (distance / brushRadius), brushHardness + 1);
+                    const change = brushIntensity * falloff * 0.1;
+
+                    switch (currentSculptMode) {
+                        case 'raise':
+                            vertices[i + 2] += change;
+                            break;
+                        case 'lower':
+                            vertices[i + 2] -= change;
+                            break;
+                        case 'flatten':
+                            vertices[i + 2] = THREE.MathUtils.lerp(vertices[i + 2], point.y, change * 0.3);
+                            break;
+                        case 'smooth':
+                            const neighbors = getNeighborVertices(i, terrain.geometry);
+                            if (neighbors.length > 0) {
+                                const avgHeight = neighbors.reduce((sum, idx) => sum + vertices[idx + 2], 0) / neighbors.length;
+                                vertices[i + 2] = THREE.MathUtils.lerp(vertices[i + 2], avgHeight, change * 0.5);
+                            }
+                            break;
+                        case 'noise':
+                            vertices[i + 2] += (Math.random() - 0.5) * change * 2;
+                            break;
+                        case 'terrace':
+                            const terraceHeight = 2;
+                            const currentHeight = vertices[i + 2];
+                            const targetHeight = Math.round(currentHeight / terraceHeight) * terraceHeight;
+                            vertices[i + 2] = THREE.MathUtils.lerp(currentHeight, targetHeight, change);
+                            break;
+                    }
+
+                    // Symmetry
+                    if (isSymmetryEnabled) {
+                        const symIndex = getSymmetricVertex(i, segments);
+                        if (symIndex >= 0 && symIndex < vertices.length) {
+                            vertices[symIndex + 2] = vertices[i + 2];
+                        }
+                    }
+                }
+            }
+
+            terrain.geometry.attributes.position.needsUpdate = true;
+            terrain.geometry.computeVertexNormals();
+        }
+
+        function paintTerrain(point) {
+            if (!terrain || !terrain.geometry) return;
+            
+            const vertices = terrain.geometry.attributes.position.array;
+            const colors = terrain.geometry.attributes.color.array;
+            const opacity = parseFloat(document.getElementById('paint-opacity').value);
+            const blend = parseFloat(document.getElementById('paint-blend').value);
+
+            const targetColor = new THREE.Color(textureColors[currentTexture]);
+
+            for (let i = 0; i < vertices.length; i += 3) {
+                const vx = vertices[i];
+                const vy = vertices[i + 1];
+                const distance = Math.sqrt(Math.pow(vx - point.x, 2) + Math.pow(vy - point.z, 2));
+
+                if (distance < brushRadius) {
+                    const falloff = Math.pow(1 - (distance / brushRadius), brushHardness + 1);
+                    const strength = opacity * falloff * blend;
+
+                    colors[i] = THREE.MathUtils.lerp(colors[i], targetColor.r, strength);
+                    colors[i + 1] = THREE.MathUtils.lerp(colors[i + 1], targetColor.g, strength);
+                    colors[i + 2] = THREE.MathUtils.lerp(colors[i + 2], targetColor.b, strength);
+                }
+            }
+
+            terrain.geometry.attributes.color.needsUpdate = true;
+        }
+
+        function placeVegetation(point) {
+            const density = parseInt(document.getElementById('veg-density').value);
+            const scaleMin = parseFloat(document.getElementById('veg-scale-min').value);
+            const scaleMax = parseFloat(document.getElementById('veg-scale-max').value);
+            const randomRotation = document.getElementById('veg-random-rotation').classList.contains('active');
+
+            for (let i = 0; i < density; i++) {
+                const offsetX = (Math.random() - 0.5) * brushRadius * 2;
+                const offsetZ = (Math.random() - 0.5) * brushRadius * 2;
+                const x = point.x + offsetX;
+                const z = point.z + offsetZ;
+                const y = getTerrainHeight(x, z);
+
+                let geometry, material, scaleY = 1;
+
+                switch (currentVegetation) {
+                    case 'tree':
+                        geometry = new THREE.ConeGeometry(1, 5, 8);
+                        material = new THREE.MeshStandardMaterial({ color: 0x0d5c0d });
+                        scaleY = 0.8 + Math.random() * 0.6;
+                        break;
+                    case 'bush':
+                        geometry = new THREE.SphereGeometry(1.5, 8, 6);
+                        material = new THREE.MeshStandardMaterial({ color: 0x2d7a2d });
+                        break;
+                    case 'rock':
+                        geometry = new THREE.DodecahedronGeometry(1);
+                        material = new THREE.MeshStandardMaterial({ color: 0x606060 });
+                        break;
+                    case 'grass':
+                        geometry = new THREE.ConeGeometry(0.3, 1.5, 4);
+                        material = new THREE.MeshStandardMaterial({ color: 0x4a9d4a });
+                        break;
+                    case 'flower':
+                        geometry = new THREE.SphereGeometry(0.5, 8, 8);
+                        material = new THREE.MeshStandardMaterial({ color: 0xff69b4 });
+                        break;
+                    case 'cactus':
+                        geometry = new THREE.CylinderGeometry(0.5, 0.5, 3, 8);
+                        material = new THREE.MeshStandardMaterial({ color: 0x2d5c2d });
+                        break;
+                }
+
+                const mesh = new THREE.Mesh(geometry, material);
+                const scale = scaleMin + Math.random() * (scaleMax - scaleMin);
+                mesh.scale.set(scale, scale * scaleY, scale);
+                mesh.position.set(x, y, z);
+                
+                if (randomRotation) {
+                    mesh.rotation.y = Math.random() * Math.PI * 2;
+                }
+
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+                mesh.userData.type = currentVegetation;
+                scene.add(mesh);
+                vegetation.push(mesh);
+            }
+
+            showToast(`✅ ${density} ${currentVegetation}(s) añadido(s)`, 'success');
+        }
+
+        function addRoadPointFromClick(e) {
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObject(terrain);
+
+            if (intersects.length > 0) {
+                const point = intersects[0].point;
+                roadPoints.push(point.clone());
+                
+                if (roadPoints.length >= 2) {
+                    createRoad();
+                }
+
+                showToast(`🛣️ Punto ${roadPoints.length} añadido`, 'info');
+            }
+        }
+
+        function createRoad() {
+            if (roadPoints.length < 2) return;
+            
+            if (roadMesh) {
+                scene.remove(roadMesh);
+            }
+
+            const curve = new THREE.CatmullRomCurve3(roadPoints);
+            const roadSmoothness = parseInt(document.getElementById('road-smooth').value);
+            const roadWidth = parseFloat(document.getElementById('road-width').value);
+            const elevation = parseFloat(document.getElementById('road-elevation').value);
+            const points = curve.getPoints(roadSmoothness);
+            
+            const roadGeometry = new THREE.BufferGeometry();
+            const roadVertices = [];
+            const roadIndices = [];
+
+            for (let i = 0; i < points.length; i++) {
+                const point = points[i];
+                const nextPoint = points[i + 1] || point;
+                const direction = new THREE.Vector3().subVectors(nextPoint, point).normalize();
+                const perpendicular = new THREE.Vector3(-direction.z, 0, direction.x).normalize();
+
+                const left = new THREE.Vector3().addVectors(point, perpendicular.clone().multiplyScalar(roadWidth / 2));
+                const right = new THREE.Vector3().addVectors(point, perpendicular.clone().multiplyScalar(-roadWidth / 2));
+
+                left.y += elevation;
+                right.y += elevation;
+
+                roadVertices.push(left.x, left.y, left.z);
+                roadVertices.push(right.x, right.y, right.z);
+
+                if (i < points.length - 1) {
+                    const base = i * 2;
+                    roadIndices.push(base, base + 1, base + 2);
+                    roadIndices.push(base + 1, base + 3, base + 2);
+                }
+            }
+
+            roadGeometry.setAttribute('position', new THREE.Float32BufferAttribute(roadVertices, 3));
+            roadGeometry.setIndex(roadIndices);
+            roadGeometry.computeVertexNormals();
+
+            const roadMaterial = new THREE.MeshStandardMaterial({
+                color: 0x2a2a2a,
+                roughness: 0.95,
+                metalness: 0.05
+            });
+
+            roadMesh = new THREE.Mesh(roadGeometry, roadMaterial);
+            roadMesh.receiveShadow = true;
+            roadMesh.castShadow = true;
+            scene.add(roadMesh);
+        }
+
+        // ===== GLB/GLTF IMPORT =====
+        function importGLB(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            showToast('📦 Cargando modelo...', 'info');
+            const loadingOverlay = document.getElementById('loading-overlay');
+            loadingOverlay.classList.add('show');
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const arrayBuffer = event.target.result;
+                
+                gltfLoader.parse(arrayBuffer, '', (gltf) => {
+                    // Remove previous imported model
+                    if (importedModel) {
+                        scene.remove(importedModel);
+                    }
+
+                    importedModel = gltf.scene;
+                    
+                    // Scale and position the model
+                    const box = new THREE.Box3().setFromObject(importedModel);
+                    const size = box.getSize(new THREE.Vector3());
+                    const maxDim = Math.max(size.x, size.y, size.z);
+                    const scale = 50 / maxDim; // Scale to fit in 50 units
+                    
+                    importedModel.scale.set(scale, scale, scale);
+                    
+                    // Center the model
+                    box.setFromObject(importedModel);
+                    const center = box.getCenter(new THREE.Vector3());
+                    importedModel.position.sub(center);
+                    importedModel.position.y = 0;
+                    
+                    // Enable shadows
+                    importedModel.traverse((child) => {
+                        if (child.isMesh) {
+                            child.castShadow = true;
+                            child.receiveShadow = true;
+                        }
+                    });
+                    
+                    scene.add(importedModel);
+                    
+                    // If model has terrain-like geometry, replace terrain
+                    if (gltf.scene.children[0] && gltf.scene.children[0].geometry) {
+                        const firstMesh = gltf.scene.children[0];
+                        if (firstMesh.geometry.attributes.position) {
+                            replaceTerrainWithImported(firstMesh);
+                        }
+                    }
+                    
+                    loadingOverlay.classList.remove('show');
+                    showToast('✅ Modelo GLB cargado exitosamente', 'success');
+                    
+                    // Reset file input
+                    e.target.value = '';
+                }, (error) => {
+                    console.error('Error al cargar GLB:', error);
+                    loadingOverlay.classList.remove('show');
+                    showToast('❌ Error al cargar el modelo', 'error');
+                });
+            };
+            
+            reader.onerror = () => {
+                loadingOverlay.classList.remove('show');
+                showToast('❌ Error al leer el archivo', 'error');
+            };
+            
+            reader.readAsArrayBuffer(file);
+        }
+
+        function replaceTerrainWithImported(mesh) {
+            if (!mesh.geometry || !mesh.geometry.attributes.position) return;
+            
+            const importedGeometry = mesh.geometry;
+            
+            // Create new terrain geometry
+            const newGeometry = new THREE.BufferGeometry();
+            newGeometry.setAttribute('position', importedGeometry.attributes.position.clone());
+            
+            // Create or copy colors
+            if (importedGeometry.attributes.color) {
+                newGeometry.setAttribute('color', importedGeometry.attributes.color.clone());
+            } else {
+                const count = importedGeometry.attributes.position.count;
+                const colors = new Float32Array(count * 3);
+                const color = new THREE.Color(0x3a9d3a);
+                for (let i = 0; i < count; i++) {
+                    colors[i * 3] = color.r;
+                    colors[i * 3 + 1] = color.g;
+                    colors[i * 3 + 2] = color.b;
+                }
+                newGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+            }
+            
+            if (importedGeometry.index) {
+                newGeometry.setIndex(importedGeometry.index.clone());
+            }
+            
+            newGeometry.computeVertexNormals();
+            
+            // Replace terrain
+            if (terrain) {
+                scene.remove(terrain);
+            }
+            
+            const material = new THREE.MeshStandardMaterial({
+                vertexColors: true,
+                roughness: 0.9,
+                metalness: 0.1,
+                flatShading: false
+            });
+            
+            terrain = new THREE.Mesh(newGeometry, material);
+            terrain.rotation.copy(mesh.rotation);
+            terrain.position.copy(mesh.position);
+            terrain.receiveShadow = true;
+            terrain.castShadow = true;
+            scene.add(terrain);
+            
+            saveState();
+            showToast('🔄 Terreno reemplazado con modelo importado', 'success');
+        }
+
+        function exportToGLB() {
+            showToast('⚠️ La exportación a GLB requiere el servidor Node.js. Exportando como JSON...', 'warning');
+            setTimeout(() => saveProject(), 1000);
+        }
+
+        function getNeighborVertices(index, geometry) {
+            const segments = Math.sqrt(geometry.attributes.position.count) - 1;
+            const vertexIndex = index / 3;
+            const row = Math.floor(vertexIndex / (segments + 1));
+            const col = vertexIndex % (segments + 1);
+            const neighbors = [];
+
+            for (let dr = -1; dr <= 1; dr++) {
+                for (let dc = -1; dc <= 1; dc++) {
+                    if (dr === 0 && dc === 0) continue;
+                    const newRow = row + dr;
+                    const newCol = col + dc;
+                    if (newRow >= 0 && newRow <= segments && newCol >= 0 && newCol <= segments) {
+                        neighbors.push((newRow * (segments + 1) + newCol) * 3);
+                    }
+                }
+            }
+            return neighbors;
+        }
+
+        function getSymmetricVertex(index, segments) {
+            const vertexIndex = index / 3;
+            const row = Math.floor(vertexIndex / (segments + 1));
+            const col = vertexIndex % (segments + 1);
+            const symCol = segments - col;
+            return (row * (segments + 1) + symCol) * 3;
+        }
+
+        function updateWeather() {
+            particles.forEach(p => scene.remove(p));
+            particles = [];
+
+            const fogDensity = parseFloat(document.getElementById('fog-density').value);
+
+            switch (weather) {
+                case 'clear':
+                    scene.fog.near = 50;
+                    scene.fog.far = 300;
+                    break;
+                case 'cloudy':
+                    scene.fog.near = 40;
+                    scene.fog.far = 200;
+                    break;
+                case 'rain':
+                    createParticleSystem('rain', 2000);
+                    scene.fog.near = 30;
+                    scene.fog.far = 150;
+                    break;
+                case 'snow':
+                    createParticleSystem('snow', 1500);
+                    scene.fog.near = 35;
+                    scene.fog.far = 180;
+                    break;
+                case 'fog':
+                    scene.fog.near = 10;
+                    scene.fog.far = 80;
+                    break;
+                case 'storm':
+                    createParticleSystem('rain', 3000);
+                    scene.fog.near = 20;
+                    scene.fog.far = 100;
+                    if (sunLight) sunLight.intensity *= 0.5;
+                    break;
+            }
+
+            showToast(`Clima: ${weather}`, 'info');
+        }
+
+        function createParticleSystem(type, count) {
+            const geometry = new THREE.BufferGeometry();
+            const positions = new Float32Array(count * 3);
+            const velocities = [];
+
+            for (let i = 0; i < count * 3; i += 3) {
+                positions[i] = (Math.random() - 0.5) * 120;
+                positions[i + 1] = Math.random() * 60 + 20;
+                positions[i + 2] = (Math.random() - 0.5) * 120;
+                
+                velocities.push({
+                    x: (Math.random() - 0.5) * (type === 'rain' ? 0.2 : 0.05),
+                    y: type === 'snow' ? -0.05 - Math.random() * 0.05 : -0.3 - Math.random() * 0.3,
+                    z: (Math.random() - 0.5) * (type === 'rain' ? 0.2 : 0.05)
+                });
+            }
+
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+            const material = new THREE.PointsMaterial({
+                color: type === 'snow' ? 0xffffff : 0x4a9eff,
+                size: type === 'snow' ? 0.4 : 0.15,
+                transparent: true,
+                opacity: type === 'snow' ? 0.8 : 0.6,
+                blending: THREE.AdditiveBlending
+            });
+
+            const particleSystem = new THREE.Points(geometry, material);
+            particleSystem.userData = { velocities, type };
+            scene.add(particleSystem);
+            particles.push(particleSystem);
+        }
+
+        function updateParticles() {
+            particles.forEach(system => {
+                const positions = system.geometry.attributes.position.array;
+                const velocities = system.userData.velocities;
+
+                for (let i = 0; i < positions.length; i += 3) {
+                    positions[i] += velocities[i / 3].x;
+                    positions[i + 1] += velocities[i / 3].y;
+                    positions[i + 2] += velocities[i / 3].z;
+
+                    if (positions[i + 1] < 0) {
+                        positions[i + 1] = 60;
+                        positions[i] = (Math.random() - 0.5) * 120;
+                        positions[i + 2] = (Math.random() - 0.5) * 120;
+                    }
+                }
+
+                system.geometry.attributes.position.needsUpdate = true;
+            });
+        }
+
+        // ===== HISTORY MANAGEMENT =====
+        function saveState() {
+            const state = {
+                vertices: terrain.geometry.attributes.position.array.slice(),
+                colors: terrain.geometry.attributes.color.array.slice(),
+                timestamp: Date.now()
+            };
+            
+            history = history.slice(0, historyIndex + 1);
+            history.push(state);
+            historyIndex++;
+            
+            if (history.length > 50) {
+                history.shift();
+                historyIndex--;
+            }
+        }
+
+        function undo() {
+            if (historyIndex > 0) {
+                historyIndex--;
+                const state = history[historyIndex];
+                terrain.geometry.attributes.position.array.set(state.vertices);
+                terrain.geometry.attributes.color.array.set(state.colors);
+                terrain.geometry.attributes.position.needsUpdate = true;
+                terrain.geometry.attributes.color.needsUpdate = true;
+                terrain.geometry.computeVertexNormals();
+                showToast('Deshacer', 'info');
+            } else {
+                showToast('No hay más acciones para deshacer', 'warning');
+            }
+        }
+
+        function redo() {
+            if (historyIndex < history.length - 1) {
+                historyIndex++;
+                const state = history[historyIndex];
+                terrain.geometry.attributes.position.array.set(state.vertices);
+                terrain.geometry.attributes.color.array.set(state.colors);
+                terrain.geometry.attributes.position.needsUpdate = true;
+                terrain.geometry.attributes.color.needsUpdate = true;
+                terrain.geometry.computeVertexNormals();
+                showToast('Rehacer', 'info');
+            } else {
+                showToast('No hay más acciones para rehacer', 'warning');
+            }
+        }
+
+        // ===== LAYER MANAGEMENT =====
+        function initializeLayers() {
+            layers.push({
+                id: 0,
+                name: 'Capa Base',
+                visible: true,
+                locked: false,
+                objects: []
+            });
+        }
+
+        // ===== MINIMAP =====
+        function initializeMinimap() {
+            const canvas = document.getElementById('minimap-canvas');
+            canvas.width = 256;
+            canvas.height = 256;
+            updateMinimap(true);
+        }
+
+        function updateMinimap(force = false) {
+            const now = performance.now();
+            if (!force && now - lastMinimapUpdate < 500) return;
+            lastMinimapUpdate = now;
+
+            const canvas = document.getElementById('minimap-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            ctx.fillStyle = '#0a0a0a';
+            ctx.fillRect(0, 0, 256, 256);
+
+            if (!terrain) return;
+
+            const vertices = terrain.geometry.attributes.position.array;
+            const colors = terrain.geometry.attributes.color.array;
+            const segments = Math.sqrt(terrain.geometry.attributes.position.count) - 1;
+            const scale = 256 / 100;
+
+            const imageData = ctx.createImageData(256, 256);
+            const data = imageData.data;
+
+            for (let i = 0; i < vertices.length; i += 3) {
+                const x = Math.floor((vertices[i] + 50) * scale);
+                const z = Math.floor((vertices[i + 1] + 50) * scale);
+                
+                if (x >= 0 && x < 256 && z >= 0 && z < 256) {
+                    const height = vertices[i + 2];
+                    const pixelIndex = (z * 256 + x) * 4;
+                    
+                    const r = Math.floor(colors[i] * 255);
+                    const g = Math.floor(colors[i + 1] * 255);
+                    const b = Math.floor(colors[i + 2] * 255);
+                    
+                    const brightness = Math.min(255, Math.max(0, 128 + height * 8));
+                    
+                    data[pixelIndex] = r * brightness / 255;
+                    data[pixelIndex + 1] = g * brightness / 255;
+                    data[pixelIndex + 2] = b * brightness / 255;
+                    data[pixelIndex + 3] = 255;
+                }
+            }
+
+            ctx.putImageData(imageData, 0, 0);
+
+            // Draw camera position
+            const camX = Math.floor((camera.position.x + 50) * scale);
+            const camZ = Math.floor((camera.position.z + 50) * scale);
+            
+            ctx.fillStyle = '#2563eb';
+            ctx.beginPath();
+            ctx.arc(camX, camZ, 5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.strokeStyle = '#3b82f6';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Draw camera direction
+            const angleRad = cameraAngle * Math.PI / 180;
+            const dirX = Math.sin(angleRad) * 15;
+            const dirZ = Math.cos(angleRad) * 15;
+            
+            ctx.strokeStyle = '#60a5fa';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(camX, camZ);
+            ctx.lineTo(camX + dirX, camZ + dirZ);
+            ctx.stroke();
+        }
+
+        // ===== PROJECT MANAGEMENT =====
+        function saveProject() {
+            const projectData = {
+                name: prompt('Nombre del proyecto:', 'Mi Terreno') || 'Proyecto_Sin_Nombre',
+                timestamp: new Date().toISOString(),
+                version: '2.0',
+                terrain: {
+                    vertices: Array.from(terrain.geometry.attributes.position.array),
+                    colors: Array.from(terrain.geometry.attributes.color.array),
+                    indices: terrain.geometry.index ? Array.from(terrain.geometry.index.array) : null
+                },
+                vegetation: vegetation.map(v => ({
+                    type: v.userData.type,
+                    position: v.position.toArray(),
+                    scale: v.scale.toArray(),
+                    rotation: v.rotation.toArray()
+                })),
+                roads: roadPoints.map(p => p.toArray()),
+                environment: {
+                    timeOfDay,
+                    weather,
+                    waterLevel,
+                    waterActive,
+                    shadowsEnabled
+                },
+                camera: {
+                    distance: cameraDistance,
+                    angle: cameraAngle,
+                    height: cameraHeight,
+                    target: cameraTarget.toArray()
+                }
+            };
+
+            const blob = new Blob([JSON.stringify(projectData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${projectData.name.replace(/[^a-z0-9]/gi, '_')}_${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            showToast('💾 Proyecto guardado exitosamente', 'success');
+        }
+
+        function loadProject(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            showToast('📂 Cargando proyecto...', 'info');
+            const loadingOverlay = document.getElementById('loading-overlay');
+            loadingOverlay.classList.add('show');
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const projectData = JSON.parse(event.target.result);
+                    
+                    // Clear current scene
+                    vegetation.forEach(v => scene.remove(v));
+                    vegetation = [];
+                    if (roadMesh) scene.remove(roadMesh);
+                    roadMesh = null;
+                    roadPoints = [];
+                    
+                    // Load terrain
+                    if (projectData.terrain) {
+                        const geometry = new THREE.BufferGeometry();
+                        geometry.setAttribute('position', new THREE.Float32BufferAttribute(projectData.terrain.vertices, 3));
+                        geometry.setAttribute('color', new THREE.Float32BufferAttribute(projectData.terrain.colors, 3));
+                        
+                        if (projectData.terrain.indices) {
+                            geometry.setIndex(projectData.terrain.indices);
+                        }
+                        
+                        geometry.computeVertexNormals();
+                        
+                        const material = new THREE.MeshStandardMaterial({
+                            vertexColors: true,
+                            roughness: 0.9,
+                            metalness: 0.1,
+                            flatShading: false
+                        });
+                        
+                        if (terrain) scene.remove(terrain);
+                        
+                        terrain = new THREE.Mesh(geometry, material);
+                        terrain.rotation.x = -Math.PI / 2;
+                        terrain.receiveShadow = true;
+                        terrain.castShadow = true;
+                        scene.add(terrain);
+                    }
+                    
+                    // Load vegetation
+                    if (projectData.vegetation) {
+                        projectData.vegetation.forEach(vegData => {
+                            let geometry, material;
+                            
+                            switch (vegData.type) {
+                                case 'tree':
+                                    geometry = new THREE.ConeGeometry(1, 5, 8);
+                                    material = new THREE.MeshStandardMaterial({ color: 0x0d5c0d });
+                                    break;
+                                case 'bush':
+                                    geometry = new THREE.SphereGeometry(1.5, 8, 6);
+                                    material = new THREE.MeshStandardMaterial({ color: 0x2d7a2d });
+                                    break;
+                                case 'rock':
+                                    geometry = new THREE.DodecahedronGeometry(1);
+                                    material = new THREE.MeshStandardMaterial({ color: 0x606060 });
+                                    break;
+                                case 'grass':
+                                    geometry = new THREE.ConeGeometry(0.3, 1.5, 4);
+                                    material = new THREE.MeshStandardMaterial({ color: 0x4a9d4a });
+                                    break;
+                                case 'flower':
+                                    geometry = new THREE.SphereGeometry(0.5, 8, 8);
+                                    material = new THREE.MeshStandardMaterial({ color: 0xff69b4 });
+                                    break;
+                                case 'cactus':
+                                    geometry = new THREE.CylinderGeometry(0.5, 0.5, 3, 8);
+                                    material = new THREE.MeshStandardMaterial({ color: 0x2d5c2d });
+                                    break;
+                                default:
+                                    return;
+                            }
+                            
+                            const mesh = new THREE.Mesh(geometry, material);
+                            mesh.position.fromArray(vegData.position);
+                            mesh.scale.fromArray(vegData.scale);
+                            mesh.rotation.fromArray(vegData.rotation);
+                            mesh.castShadow = true;
+                            mesh.receiveShadow = true;
+                            mesh.userData.type = vegData.type;
+                            scene.add(mesh);
+                            vegetation.push(mesh);
+                        });
+                    }
+                    
+                    // Load roads
+                    if (projectData.roads && projectData.roads.length > 0) {
+                        roadPoints = projectData.roads.map(p => new THREE.Vector3().fromArray(p));
+                        if (roadPoints.length >= 2) {
+                            createRoad();
+                        }
+                    }
+                    
+                    // Load environment
+                    if (projectData.environment) {
+                        timeOfDay = projectData.environment.timeOfDay || 12;
+                        weather = projectData.environment.weather || 'clear';
+                        waterLevel = projectData.environment.waterLevel || 0;
+                        waterActive = projectData.environment.waterActive || false;
+                        shadowsEnabled = projectData.environment.shadowsEnabled !== false;
+                        
+                        document.getElementById('time-slider').value = timeOfDay;
+                        document.getElementById('time-val').textContent = `${Math.floor(timeOfDay)}:${Math.floor((timeOfDay % 1) * 60).toString().padStart(2, '0')}`;
+                        document.getElementById('water-level').value = waterLevel;
+                        document.getElementById('water-level-val').textContent = waterLevel;
+                        document.getElementById('water-toggle').classList.toggle('active', waterActive);
+                        document.getElementById('shadows-toggle').classList.toggle('active', shadowsEnabled);
+                        
+                        if (water) {
+                            water.position.y = waterLevel;
+                            water.visible = waterActive;
+                        }
+                        
+                        renderer.shadowMap.enabled = shadowsEnabled;
+                        updateSkyColor();
+                        
+                        document.querySelectorAll('[data-weather]').forEach(btn => {
+                            btn.classList.toggle('active', btn.dataset.weather === weather);
+                        });
+                        updateWeather();
+                    }
+                    
+                    // Load camera
+                    if (projectData.camera) {
+                        cameraDistance = projectData.camera.distance || 80;
+                        cameraAngle = projectData.camera.angle || 0;
+                        cameraHeight = projectData.camera.height || 50;
+                        if (projectData.camera.target) {
+                            cameraTarget.fromArray(projectData.camera.target);
+                        }
+                        updateCameraPosition();
+                    }
+                    
+                    // Reset history
+                    history = [];
+                    historyIndex = -1;
+                    saveState();
+                    
+                    loadingOverlay.classList.remove('show');
+                    showToast(`✅ Proyecto "${projectData.name}" cargado`, 'success');
+                    
+                    // Reset file input
+                    e.target.value = '';
+                    
+                } catch (error) {
+                    console.error('Error al cargar proyecto:', error);
+                    loadingOverlay.classList.remove('show');
+                    showToast('❌ Error al cargar el proyecto', 'error');
+                }
+            };
+            
+            reader.onerror = () => {
+                loadingOverlay.classList.remove('show');
+                showToast('❌ Error al leer el archivo', 'error');
+            };
+            
+            reader.readAsText(file);
+        }
+
+        function exportTerrain() {
+            const format = prompt('Formato de exportación:\n1 = JSON completo\n2 = OBJ solo terreno', '1');
+            
+            if (format === '1') {
+                saveProject();
+            } else if (format === '2') {
+                const vertices = terrain.geometry.attributes.position.array;
+                let objContent = '# Terrain Editor Pro Export\n';
+                objContent += `# Fecha: ${new Date().toISOString()}\n`;
+                objContent += `# Vértices: ${vertices.length / 3}\n\n`;
+                
+                // Vertices
+                for (let i = 0; i < vertices.length; i += 3) {
+                    objContent += `v ${vertices[i].toFixed(6)} ${vertices[i + 2].toFixed(6)} ${-vertices[i + 1].toFixed(6)}\n`;
+                }
+                
+                // Vertex colors (if supported)
+                if (terrain.geometry.attributes.color) {
+                    const colors = terrain.geometry.attributes.color.array;
+                    objContent += '\n# Vertex Colors\n';
+                    for (let i = 0; i < colors.length; i += 3) {
+                        objContent += `vc ${colors[i].toFixed(3)} ${colors[i + 1].toFixed(3)} ${colors[i + 2].toFixed(3)}\n`;
+                    }
+                }
+                
+                // Faces
+                if (terrain.geometry.index) {
+                    const indices = terrain.geometry.index.array;
+                    objContent += '\n# Faces\n';
+                    for (let i = 0; i < indices.length; i += 3) {
+                        objContent += `f ${indices[i] + 1} ${indices[i + 1] + 1} ${indices[i + 2] + 1}\n`;
+                    }
+                }
+
+                const blob = new Blob([objContent], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `terrain_${Date.now()}.obj`;
+                a.click();
+                URL.revokeObjectURL(url);
+
+                showToast('📦 Terreno exportado en formato OBJ', 'success');
+            }
+        }
+
+        // ===== UI UTILITIES =====
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icons = {
+                success: '✓',
+                error: '✕',
+                warning: '⚠',
+                info: 'ℹ'
+            };
+            
+            toast.innerHTML = `
+                <div class="toast-icon">${icons[type] || icons.info}</div>
+                <div class="toast-message">${message}</div>
+            `;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideUp 0.3s ease reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // ===== PERFORMANCE MONITORING =====
+        function updateStats() {
+            frames++;
+            const currentTime = performance.now();
+            
+            if (currentTime >= lastTime + 1000) {
+                fps = frames;
+                frames = 0;
+                lastTime = currentTime;
+                
+                document.getElementById('fps').textContent = fps;
+                document.getElementById('objects').textContent = scene.children.length;
+                
+                let totalVertices = 0;
+                scene.traverse((obj) => {
+                    if (obj.geometry && obj.geometry.attributes.position) {
+                        totalVertices += obj.geometry.attributes.position.count;
+                    }
+                });
+                document.getElementById('vertices').textContent = totalVertices.toLocaleString();
+                
+                const memory = (performance.memory?.usedJSHeapSize || 0) / 1024 / 1024;
+                document.getElementById('memory').textContent = memory.toFixed(1);
+            }
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // ===== ANIMATION LOOP =====
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            updateParticles();
+            updateStats();
+            
+            if (water && waterActive) {
+                water.material.opacity = 0.6 + Math.sin(Date.now() * 0.001) * 0.1;
+                water.position.y = waterLevel + Math.sin(Date.now() * 0.0005) * 0.05;
+            }
+            
+            if (frames % 60 === 0) {
+                updateMinimap();
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        // ===== START APPLICATION =====
+        window.addEventListener('DOMContentLoaded', () => {
+            const loadingOverlay = document.getElementById('loading-overlay');
+            loadingOverlay.classList.add('show');
+            
+            setTimeout(() => {
+                init();
+                loadingOverlay.classList.remove('show');
+            }, 500);
+        });
+    </script>
+</body>
+</html>
+                new">
+                        <span class="dropdown-item-icon">📄</span>
+                        Nuevo Proyecto
+                    </div>
+                    <div class="dropdown-item" data-action="open">
+                        <span class="dropdown-item-icon">📂</span>
+                        Abrir Proyecto
+                    </div>
+                    <div class="dropdown-item" data-action="import-glb">
+                        <span class="dropdown-item-icon">📦</span>
+                        Importar GLB/GLTF
+                    </div>
+                    <div class="dropdown-item" data-action="save">
+                        <span class="dropdown-item-icon">💾</span>
+                        Guardar
+                    </div>
+                    <div class="dropdown-item" data-action="export">
+                        <span class="dropdown-item-icon">📤</span>
+                        Exportar
+                    </div>
+                    <div class="dropdown-item" data-action="export-glb">
+                        <span class="dropdown-item-icon">🎁</span>
+                        Exportar como GLB
+                    </div>
+                </div>
+            </div>
+            
+            <div class="menu-item" id="edit-menu">
+                Editar
+                <div class="dropdown-menu" id="edit-dropdown">
+                    <div class="dropdown-item" data-action="undo">
+                        <span class="dropdown-item-icon">↶</span>
+                        Deshacer (Ctrl+Z)
+                    </div>
+                    <div class="dropdown-item" data-action="redo">
+                        <span class="dropdown-item-icon">↷</span>
+                        Rehacer (Ctrl+Y)
+                    </div>
+                    <div class="dropdown-item" data-action="reset">
+                        <span class="dropdown-item-icon">🔄</span>
+                        Resetear Terreno
+                    </div>
+                </div>
+            </div>
+            
+            <div class="menu-item" id="view-menu">
+                Vista
+                <div class="dropdown-menu" id="view-dropdown">
+                    <div class="dropdown-item" data-action="toggle-minimap">
+                        <span class="dropdown-item-icon">🗺️</span>
+                        Alternar Minimapa
+                    </div>
+                    <div class="dropdown-item" data-action="toggle-grid">
+                        <span class="dropdown-item-icon">⊞</span>
+                        Alternar Rejilla
+                    </div>
+                    <div class="dropdown-item" data-action="toggle-stats">
+                        <span class="dropdown-item-icon">📊</span>
+                        Alternar Estadísticas
+                    </div>
+                    <div class="dropdown-item" data-action="
