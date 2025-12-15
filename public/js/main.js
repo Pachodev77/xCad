@@ -205,6 +205,9 @@ class App {
         if (this.waterSystem) this.waterSystem.update(delta);
         if (this.minimapSystem) this.minimapSystem.update();
 
+        // Update controls
+        if (this.sceneManager) this.sceneManager.update();
+
         this.renderer.render(this.scene, this.camera);
 
         const vegCount = this.vegetationSystem ? Object.values(this.vegetationSystem.instances).reduce((acc, val) => acc + val.mesh.count, 0) : 0;
