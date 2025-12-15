@@ -179,6 +179,19 @@ export class UIManager {
         bindSlider('road-width', (v) => this.app.roadSystem.setParams({ width: v }));
         bindSlider('road-smooth', (v) => this.app.roadSystem.setParams({ smoothness: v }));
         bindSlider('road-elevation', (v) => this.app.roadSystem.setParams({ elevation: v }));
+
+        // Collapse Side Panel on Header Click
+        document.querySelectorAll('.section-collapse').forEach(arrow => {
+            arrow.addEventListener('click', (e) => {
+                e.preventDefault(); // Prevent bubbling if needed
+                this.propertiesPanel.classList.remove('show');
+
+                // Deselect active tool? User might want to keep tool active but hide panel.
+                // Standard behavior: just hide panel.
+                // Optionally visually deselect icon? 
+                // document.querySelectorAll('.tool-icon').forEach(i => i.classList.remove('active'));
+            });
+        });
     }
 
     handleMenuAction(action) {
