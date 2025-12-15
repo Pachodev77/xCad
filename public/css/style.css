@@ -341,7 +341,7 @@ canvas {
     gap: 16px;
 }
 
-.section-header.collapsed + .section-content {
+.section-header.collapsed+.section-content {
     display: none;
 }
 
@@ -802,48 +802,61 @@ canvas {
 /* ===== TOAST NOTIFICATIONS ===== */
 .toast-container {
     position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
+    top: 70px;
+    /* Below top bar */
+    right: 20px;
+    /* Removed transform and left centering */
     display: flex;
     flex-direction: column;
     gap: 8px;
     z-index: 1003;
     pointer-events: none;
+    align-items: flex-end;
+    /* Align to right */
 }
 
 .toast {
     background: var(--bg-panel);
     backdrop-filter: blur(20px);
-    border: 2px solid var(--border);
-    border-radius: var(--radius);
-    padding: 14px 20px;
+    border: 1px solid var(--border);
+    /* Thinner border */
+    border-radius: var(--radius-sm);
+    /* Smaller radius */
+    padding: 8px 12px;
+    /* Reduced padding */
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
     box-shadow: var(--shadow);
-    animation: slideUp 0.3s ease;
-    min-width: 300px;
+    animation: slideInRight 0.3s ease;
+    min-width: auto;
+    /* Allow auto width */
+    max-width: 250px;
+    /* Limit width */
 }
 
-@keyframes slideUp {
+@keyframes slideInRight {
     from {
-        transform: translateY(20px);
+        transform: translateX(20px);
+        /* Slide from right */
         opacity: 0;
     }
+
     to {
-        transform: translateY(0);
+        transform: translateX(0);
         opacity: 1;
     }
 }
 
 .toast-icon {
-    font-size: 20px;
+    font-size: 16px;
+    /* Smaller icon */
 }
 
 .toast-message {
     flex: 1;
-    font-size: 14px;
+    font-size: 12px;
+    /* Smaller text */
     font-weight: 500;
 }
 
@@ -931,7 +944,9 @@ canvas {
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* ===== SCROLLBAR ===== */
@@ -955,9 +970,12 @@ canvas {
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 1280px) {
-    .properties-panel, .layers-panel {
+
+    .properties-panel,
+    .layers-panel {
         width: 280px;
     }
+
     .minimap-container {
         width: 220px;
         height: 220px;
@@ -991,7 +1009,7 @@ canvas {
 
 .grid-overlay.show {
     display: block;
-    background-image: 
+    background-image:
         linear-gradient(rgba(37, 99, 235, 0.1) 1px, transparent 1px),
         linear-gradient(90deg, rgba(37, 99, 235, 0.1) 1px, transparent 1px);
     background-size: 50px 50px;

@@ -76,7 +76,7 @@ export class TerrainSystem {
         return 0;
     }
 
-    getInteconnectPoint(pointer, camera) {
+    getIntersectPoint(pointer, camera) {
         this.raycaster.setFromCamera(pointer, camera);
         const intersects = this.raycaster.intersectObject(this.mesh);
         return intersects.length > 0 ? intersects[0] : null;

@@ -42,6 +42,24 @@ export class UIManager {
             document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
         });
 
+        // Menu Actions
+        document.querySelectorAll('.dropdown-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                const action = e.currentTarget.dataset.action;
+                this.handleMenuAction(action);
+            });
+        });
+
+        // File Input Binding
+        const fileInput = document.getElementById('file-input-project');
+        if (fileInput) {
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    this.app.loadProject(e.target.files[0]);
+                }
+            });
+        }
+
         // Undo/Redo Buttons (Visual only, logic in App)
         document.getElementById('undo-btn').addEventListener('click', () => this.app.stateManager.undo());
         document.getElementById('redo-btn').addEventListener('click', () => this.app.stateManager.redo());
@@ -129,6 +147,51 @@ export class UIManager {
                 this.app.activeVegetationType = e.target.dataset.veg;
             });
         });
+    }
+
+    handleMenuAction(action) {
+        switch (action) {
+            case 'new':
+                this.app.newProject();
+                break;
+            case 'open':
+                document.getElementById('file-input-project').click();
+                break;
+            case 'save':
+                this.app.saveProject();
+                break;
+            case 'undo':
+                this.app.stateManager.undo();
+                break;
+            case 'redo':
+                this.app.stateManager.redo();
+                break;
+            case 'reset':
+                this.app.newProject();
+                break;
+            case 'toggle-minimap':
+                document.getElementById('minimap-container').classList.toggle('hidden');
+                break;
+            case 'toggle-grid':
+                document.getElementById('grid-overlay').classList.toggle('show');
+                break;
+            case 'toggle-stats':
+                // Easy toggle if we had a class, for now toggle opacity?
+                const stats = document.querySelector('.stats-bar');
+                stats.style.opacity = stats.style.opacity === '0' ? '1' : '0';
+                break;
+            case 'fullscreen':
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen();
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    }
+                }
+                break;
+            default:
+                this.showToast(`Action '${action}' not yet implemented`, 'warning');
+        }
     }
 
     showToast(msg, type = 'info') {
