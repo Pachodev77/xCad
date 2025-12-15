@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terrain Editor Pro - Professional 3D Landscape Design</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="canvas-container">
+        <canvas></canvas>
+    </div>
+
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <div class="logo">
+            <div class="logo-icon">🏔️</div>
+            <span>Terrain Editor Pro</span>
+        </div>
+        
+        <div class="top-menu">
+            <div class="menu-item" id="file-menu">
+                Archivo
+                <div class="dropdown-menu" id="file-dropdown">
+                    <div class="dropdown-item" data-action="new">
+                        <span class="dropdown-item-icon">📄</span>
+                        Nuevo Proyecto
+                    </div>
+                    <div class="dropdown-item" data-action="open">
+                        <span class="dropdown-item-icon">📂</span>
+                        Abrir Proyecto
+                    </div>
+                    <div class="dropdown-item" data-action="import-glb">
+                        <span class="dropdown-item-icon">📦</span>
+                        Importar GLB/GLTF
+                    </div>
+                    <div class="dropdown-item" data-action="save">
+                        <span class="dropdown-item-icon">💾</span>
+                        Guardar
+                    </div>
+                    <div class="dropdown-item" data-action="export">
+                        <span class="dropdown-item-icon">📤</span>
+                        Exportar
+                    </div>
+                    <div class="dropdown-item" data-action="export-glb">
+                        <span class="dropdown-item-icon">🎁</span>
+                        Exportar como GLB
+                    </div>
+                </div>
+            </div>
+            
+            <div class="menu-item" id="edit-menu">
+                Editar
+                <div class="dropdown-menu" id="edit-dropdown">
+                    <div class="dropdown-item" data-action="undo">
+                        <span class="dropdown-item-icon">↶</span>
+                        Deshacer (Ctrl+Z)
+                    </div>
+                    <div class="dropdown-item" data-action="redo">
+                        <span class="dropdown-item-icon">↷</span>
+                        Rehacer (Ctrl+Y)
+                    </div>
+                    <div class="dropdown-item" data-action="reset">
+                        <span class="dropdown-item-icon">🔄</span>
+                        Resetear Terreno
+                    </div>
+                </div>
+            </div>
+            
+            <div class="menu-item" id="view-menu">
+                Vista
+                <div class="dropdown-menu" id="view-dropdown">
+                    <div class="dropdown-item" data-action="toggle-minimap">
+                        <span class="dropdown-item-icon">🗺️</span>
+                        Alternar Minimapa
+                    </div>
+                    <div class="dropdown-item" data-action="toggle-grid">
+                        <span class="dropdown-item-icon">⊞</span>
+                        Alternar Rejilla
+                    </div>
+                    <div class="dropdown-item" data-action="toggle-stats">
+                        <span class="dropdown-item-icon">📊</span>
+                        Alternar Estadísticas
+                    </div>
+                    <div class="dropdown-item" data-action="fullscreen">
+                         <span class="dropdown-item-icon">⛶</span>
+                        Pantalla Completa
+                   </div>
+                </div>
+            </div>
+
+            <div class="history-controls">
+                <button class="btn btn-icon" id="undo-btn" title="Deshacer (Ctrl+Z)" disabled>
+                    <span class="btn-icon">↩️</span>
+                    <span class="btn-text">Deshacer</span>
+                </button>
+                <button class="btn btn-icon" id="redo-btn" title="Rehacer (Ctrl+Shift+Z)" disabled>
+                    <span class="btn-icon">↪️</span>
+                    <span class="btn-text">Rehacer</span>
+                </button>
+            </div>
+        </div>
+        
+        <div class="stats-bar">
+            <div class="stat-item">
+                <span>FPS:</span>
+                <span class="stat-value" id="fps">60</span>
+            </div>
+            <div class="stat-item">
+                <span>Objetos:</span>
+                <span class="stat-value" id="objects">0</span>
+            </div>
+            <div class="stat-item">
+                <span>Vértices:</span>
+                <span class="stat-value" id="vertices">0</span>
+            </div>
+            <div class="stat-item">
+                <span>Memoria:</span>
+                <span class="stat-value" id="memory">0 MB</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="tool-icon active" data-tool="sculpt" title="Esculpir">
+            🗿
+            <div class="tool-tooltip">Esculpir (1)</div>
+        </div>
+        <div class="tool-icon" data-tool="paint" title="Pintar">
+            🎨
+            <div class="tool-tooltip">Pintar (2)</div>
+        </div>
+        <div class="tool-icon" data-tool="vegetation" title="Vegetación">
+            🌲
+            <div class="tool-tooltip">Vegetación (3)</div>
+        </div>
+        <div class="tool-icon" data-tool="water" title="Agua">
+            💧
+            <div class="tool-tooltip">Agua (4)</div>
+        </div>
+        <div class="tool-icon" data-tool="road" title="Carreteras">
+            🛣️
+            <div class="tool-tooltip">Carreteras (5)</div>
+        </div>
+        <div class="tool-icon" data-tool="objects" title="Objetos">
+            📦
+            <div class="tool-tooltip">Objetos (6)</div>
+        </div>
+        <div class="tool-icon" data-tool="measure" title="Medir">
+            📏
+            <div class="tool-tooltip">Medir (7)</div>
+        </div>
+        <div class="tool-icon" data-tool="environment" title="Entorno">
+            ☀️
+            <div class="tool-tooltip">Entorno (8)</div>
+        </div>
+    </div>
+
+    <!-- Properties Panel -->
+    <div class="properties-panel show" id="properties-panel">
+        <!-- Sculpt Properties -->
+        <div class="panel-section" id="sculpt-props">
+            <div class="section-header">
+                <div class="section-title">
+                    🗿 Herramientas de Esculpido
+                </div>
+                <div class="section-collapse">▼</div>
+            </div>
+            <div class="section-content">
+                <div class="button-group">
+                    <button class="btn active" data-sculpt="raise">⬆️ Elevar</button>
+                    <button class="btn" data-sculpt="lower">⬇️ Rebajar</button>
+                    <button class="btn" data-sculpt="flatten">➖ Aplanar</button>
+                    <button class="btn" data-sculpt="smooth">〰️ Suavizar</button>
+                    <button class="btn" data-sculpt="noise">🎲 Ruido</button>
+                    <button class="btn" data-sculpt="terrace">🏔️ Terrazas</button>
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Radio del Pincel</span>
+                        <span class="control-value" id="brush-radius-val">15</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="brush-radius" min="1" max="100" value="15">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Intensidad</span>
+                        <span class="control-value" id="brush-intensity-val">0.5</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="brush-intensity" min="0.1" max="3" step="0.1" value="0.5">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Dureza del Pincel</span>
+                        <span class="control-value" id="brush-hardness-val">0.5</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="brush-hardness" min="0" max="1" step="0.1" value="0.5">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Suavizado</span>
+                        <span class="control-value" id="brush-smooth-val">3</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="brush-smooth" min="0" max="10" value="3">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">
+                        <span>Simetría</span>
+                        <div class="toggle-switch" id="symmetry-toggle">
+                            <div class="toggle-knob"></div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Paint Properties -->
+        <div class="panel-section" id="paint-props" style="display: none;">
+            <div class="section-header">
+                <div class="section-title">
+                    🎨 Herramientas de Pintado
+                </div>
+                <div class="section-collapse">▼</div>
+            </div>
+            <div class="section-content">
+                <div class="control-label">Texturas Disponibles</div>
+                <div class="texture-grid">
+                    <div class="texture-btn active" data-texture="grass">
+                        🟢
+                        <div class="texture-name">Pasto</div>
+                    </div>
+                    <div class="texture-btn" data-texture="dirt">
+                        🟤
+                        <div class="texture-name">Tierra</div>
+                    </div>
+                    <div class="texture-btn" data-texture="stone">
+                        ⚪
+                        <div class="texture-name">Piedra</div>
+                    </div>
+                    <div class="texture-btn" data-texture="sand">
+                        🟡
+                        <div class="texture-name">Arena</div>
+                    </div>
+                    <div class="texture-btn" data-texture="snow">
+                        ❄️
+                        <div class="texture-name">Nieve</div>
+                    </div>
+                    <div class="texture-btn" data-texture="rock">
+                        🪨
+                        <div class="texture-name">Roca</div>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Opacidad</span>
+                        <span class="control-value" id="paint-opacity-val">1.0</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="paint-opacity" min="0.1" max="1" step="0.1" value="1">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Mezcla</span>
+                        <span class="control-value" id="paint-blend-val">0.5</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="paint-blend" min="0" max="1" step="0.1" value="0.5">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vegetation Properties -->
+        <div class="panel-section" id="vegetation-props" style="display: none;">
+            <div class="section-header">
+                <div class="section-title">
+                    🌲 Vegetación
+                </div>
+                <div class="section-collapse">▼</div>
+            </div>
+            <div class="section-content">
+                <div class="button-group">
+                    <button class="btn active" data-veg="tree">🌲 Árbol</button>
+                    <button class="btn" data-veg="bush">🌳 Arbusto</button>
+                    <button class="btn" data-veg="rock">🪨 Roca</button>
+                    <button class="btn" data-veg="grass">🌿 Pasto</button>
+                    <button class="btn" data-veg="flower">🌸 Flores</button>
+                    <button class="btn" data-veg="cactus">🌵 Cactus</button>
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Densidad</span>
+                        <span class="control-value" id="veg-density-val">5</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="veg-density" min="1" max="30" value="5">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Escala Mínima</span>
+                        <span class="control-value" id="veg-scale-min-val">0.5</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="veg-scale-min" min="0.1" max="2" step="0.1" value="0.5">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Escala Máxima</span>
+                        <span class="control-value" id="veg-scale-max-val">1.5</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="veg-scale-max" min="0.5" max="3" step="0.1" value="1.5">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">
+                        <span>Rotación Aleatoria</span>
+                        <div class="toggle-switch active" id="veg-random-rotation">
+                            <div class="toggle-knob"></div>
+                        </div>
+                    </label>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">
+                        <span>Seguir Pendiente</span>
+                        <div class="toggle-switch active" id="veg-follow-slope">
+                            <div class="toggle-knob"></div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Environment Properties -->
+        <div class="panel-section" id="environment-props" style="display: none;">
+            <div class="section-header">
+                <div class="section-title">
+                    ☀️ Entorno y Clima
+                </div>
+                <div class="section-collapse">▼</div>
+            </div>
+            <div class="section-content">
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Hora del Día</span>
+                        <span class="control-value" id="time-val">12:00</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="time-slider" min="0" max="24" step="0.5" value="12">
+                    </div>
+                </div>
+                
+                <div class="control-label">Clima</div>
+                <div class="button-group">
+                    <button class="btn active" data-weather="clear">☀️ Soleado</button>
+                    <button class="btn" data-weather="cloudy">☁️ Nublado</button>
+                    <button class="btn" data-weather="rain">🌧️ Lluvia</button>
+                    <button class="btn" data-weather="snow">❄️ Nieve</button>
+                    <button class="btn" data-weather="fog">🌫️ Niebla</button>
+                    <button class="btn" data-weather="storm">⛈️ Tormenta</button>
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Intensidad del Sol</span>
+                        <span class="control-value" id="sun-intensity-val">1.0</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="sun-intensity" min="0" max="2" step="0.1" value="1">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Luz Ambiental</span>
+                        <span class="control-value" id="ambient-val">0.4</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="ambient-light" min="0" max="1" step="0.1" value="0.4">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Densidad de Niebla</span>
+                        <span class="control-value" id="fog-density-val">0.002</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="fog-density" min="0" max="0.01" step="0.001" value="0.002">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">
+                        <span>Sombras</span>
+                        <div class="toggle-switch active" id="shadows-toggle">
+                            <div class="toggle-knob"></div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Water Properties -->
+        <div class="panel-section" id="water-props" style="display: none;">
+            <div class="section-header">
+                <div class="section-title">
+                    💧 Propiedades del Agua
+                </div>
+                <div class="section-collapse">▼</div>
+            </div>
+            <div class="section-content">
+                <div class="control-group">
+                    <label class="control-label">
+                        <span>Activar Agua</span>
+                        <div class="toggle-switch" id="water-toggle">
+                            <div class="toggle-knob"></div>
+                        </div>
+                    </label>
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Nivel del Agua</span>
+                        <span class="control-value" id="water-level-val">0</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="water-level" min="-20" max="30" value="0">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Transparencia</span>
+                        <span class="control-value" id="water-opacity-val">0.6</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="water-opacity" min="0.1" max="1" step="0.1" value="0.6">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-label">Tinte del Agua</div>
+                    <input type="color" class="color-picker" id="water-color" value="#1e90ff">
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Velocidad de Olas</span>
+                        <span class="control-value" id="wave-speed-val">1.0</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="wave-speed" min="0" max="3" step="0.1" value="1">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Road Properties -->
+        <div class="panel-section" id="road-props" style="display: none;">
+            <div class="section-header">
+                <div class="section-title">
+                    🛣️ Propiedades de Carreteras
+                </div>
+                <div class="section-collapse">▼</div>
+            </div>
+            <div class="section-content">
+                <div class="button-group">
+                    <button class="btn btn-primary" id="road-start">Iniciar Carretera</button>
+                    <button class="btn btn-danger" id="road-clear">Limpiar</button>
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Ancho</span>
+                        <span class="control-value" id="road-width-val">8</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="road-width" min="2" max="30" value="8">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Suavizado de Curvas</span>
+                        <span class="control-value" id="road-smooth-val">50</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="road-smooth" min="10" max="200" value="50">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Elevar sobre Terreno</span>
+                        <span class="control-value" id="road-elevation-val">0.2</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="road-elevation" min="0" max="2" step="0.1" value="0.2">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">
+                        <span>Auto-Aplanar Terreno</span>
+                        <div class="toggle-switch active" id="road-flatten">
+                            <div class="toggle-knob"></div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Layers Panel -->
+    <div class="layers-panel" id="layers-panel">
+        <div class="layers-header">
+            <div class="section-title">📚 Capas</div>
+            <button class="btn btn-sm btn-primary" id="add-layer">➕ Nueva</button>
+        </div>
+        <div class="layers-list" id="layers-list">
+            <div class="layer-item active" data-layer="0">
+                <div class="layer-header">
+                    <div class="layer-name">Capa Base</div>
+                    <div class="layer-controls">
+                        <div class="layer-btn" title="Visible">👁️</div>
+                        <div class="layer-btn" title="Bloquear">🔓</div>
+                    </div>
+                </div>
+                <div class="layer-info">
+                    <span>0 objetos</span>
+                    <span>•</span>
+                    <span>Visible</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Minimap -->
+    <div class="minimap-container" id="minimap-container">
+        <div class="minimap-header">
+            <div class="minimap-title">Mini-Mapa</div>
+            <div class="minimap-controls">
+                <button class="minimap-btn" id="minimap-refresh" title="Actualizar">🔄</button>
+                <button class="minimap-btn" id="minimap-close" title="Cerrar">✕</button>
+            </div>
+        </div>
+        <div class="minimap-canvas-wrapper">
+            <canvas id="minimap-canvas"></canvas>
+            <div class="minimap-legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #3a9d3a;"></div>
+                    <span>Pasto</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #808080;"></div>
+                    <span>Piedra</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ffffff;"></div>
+                    <span>Nieve</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #2563eb;"></div>
+                    <span>Cámara</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Brush Cursor -->
+    <div class="brush-cursor" id="brush-cursor"></div>
+
+    <!-- Grid Overlay -->
+    <div class="grid-overlay" id="grid-overlay"></div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Context Menu -->
+    <div class="context-menu" id="context-menu">
+        <div class="context-item" data-action="copy">
+            <span>📋</span> Copiar
+        </div>
+        <div class="context-item" data-action="paste">
+            <span>📄</span> Pegar
+        </div>
+        <div class="context-item" data-action="delete">
+            <span>🗑️</span> Eliminar
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loader"></div>
+    </div>
+
+    <!-- Hidden File Inputs -->
+    <input type="file" id="file-input-project" accept=".json" style="display: none;">
+    <input type="file" id="file-input-glb" accept=".glb,.gltf" style="display: none;">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
