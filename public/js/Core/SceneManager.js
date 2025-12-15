@@ -74,6 +74,23 @@ export class SceneManager {
             this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
             this.controls.enableDamping = true;
             this.controls.dampingFactor = 0.05;
+
+            // Reassign inputs
+            this.controls.mouseButtons = {
+                LEFT: THREE.MOUSE.PAN, // Or DO_NOTHING? User needs Left for Tool. 
+                // Wait, if set to PAN it consumes the event? 
+                // Best to set to null/DO_NOTHING to allow raycasting pass-through?
+                // Actually, Three.js controls usually consume events. 
+                // Let's set LEFT to null.
+                // User said: "rotation ... clicking the mouse wheel"
+                // So MIDDLE = ROTATE.
+                LEFT: null, // Reserved for tools
+                MIDDLE: THREE.MOUSE.ROTATE,
+                RIGHT: THREE.MOUSE.PAN
+            };
+
+            // Allow zoom with scroll
+            this.controls.enableZoom = true;
         } else {
             console.error('OrbitControls not loaded');
         }
