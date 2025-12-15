@@ -69,13 +69,17 @@ export class UIManager {
 
         // Context Menu
         window.addEventListener('contextmenu', (e) => {
-            e.preventDefault();
-            const menu = document.getElementById('context-menu');
-            if (menu) {
-                menu.style.display = 'block';
-                menu.style.left = `${e.clientX}px`;
-                menu.style.top = `${e.clientY}px`;
+            // Only show custom menu for vegetation tool
+            if (this.app.activeToolName === 'vegetation') {
+                e.preventDefault();
+                const menu = document.getElementById('context-menu');
+                if (menu) {
+                    menu.style.display = 'block';
+                    menu.style.left = `${e.clientX}px`;
+                    menu.style.top = `${e.clientY}px`;
+                }
             }
+            // Otherwise allow default behavior (or nothing if blocked elsewhere)
         });
 
         window.addEventListener('click', () => {
