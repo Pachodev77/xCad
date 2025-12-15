@@ -375,6 +375,7 @@ canvas {
     background: var(--dark-lighter);
     outline: none;
     -webkit-appearance: none;
+    appearance: none;
     position: relative;
 }
 
@@ -1058,3 +1059,43 @@ canvas {
     .properties-panel.show {
         transform: translateY(0);
     }
+}
+
+/* LANDSCAPE (Phones) - Sidebar at Left (Compact) */
+@media (max-width: 1024px) and (orientation: landscape) {
+    .sidebar {
+        width: calc(48px + env(safe-area-inset-left));
+        top: calc(48px + env(safe-area-inset-top));
+        bottom: 0;
+        padding: 8px 0 8px env(safe-area-inset-left);
+        left: 0;
+        height: auto;
+        border-right: 1px solid var(--border);
+        border-top: none;
+        flex-direction: column;
+        justify-content: flex-start;
+    }
+
+    .sidebar.expanded {
+        width: calc(48px + env(safe-area-inset-left));
+    }
+
+    .tool-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+    }
+
+    .properties-panel {
+        left: calc(48px + env(safe-area-inset-left));
+        top: calc(48px + env(safe-area-inset-top));
+        width: 250px;
+        max-height: 100%;
+        padding-bottom: env(safe-area-inset-bottom);
+        padding-right: env(safe-area-inset-right);
+    }
+
+    #canvas-container {
+        height: 100vh;
+    }
+}
