@@ -112,11 +112,15 @@ class App {
     initInteraction() {
         const canvas = this.renderer.domElement;
 
-        canvas.addEventListener('mousedown', (e) => {
+        canvas.addEventListener('pointerdown', (e) => {
             if (e.button === 0) { // Left click only
+                // Canvas check might fail if strict equality? No, domElement is exact.
                 if (e.target !== canvas) return;
 
                 this.isMouseDown = true;
+
+                // Capture pointer to ensure we track it even if it leaves canvas
+                canvas.setPointerCapture(e.pointerId);
 
                 if (this.activeToolName === 'sculpt' || this.activeToolName === 'paint') {
                     this.stateManager.saveState();
@@ -126,11 +130,12 @@ class App {
             }
         });
 
-        window.addEventListener('mouseup', () => {
+        canvas.addEventListener('pointerup', (e) => {
             this.isMouseDown = false;
+            canvas.releasePointerCapture(e.pointerId);
         });
 
-        window.addEventListener('mousemove', (e) => {
+        canvas.addEventListener('pointermove', (e) => {
             this.mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
             this.mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
 
