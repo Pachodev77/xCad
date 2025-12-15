@@ -921,15 +921,23 @@ canvas {
 }
 
 /* ===== MOBILE RESPONSIVE ===== */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
 
     /* --- Shared Mobile Styles --- */
     .top-bar {
         height: 48px;
         /* Compact */
         padding: 0 10px;
+        padding-left: max(10px, env(safe-area-inset-left));
+        padding-right: max(10px, env(safe-area-inset-right));
+        padding-top: env(safe-area-inset-top);
+        height: calc(48px + env(safe-area-inset-top));
+        /* Expand height for notch */
+        align-items: flex-end;
+        /* Push content down if top padded */
+        padding-bottom: 8px;
+        /* Center content vertically roughly */
         overflow-x: auto;
-        /* Allow scroll if needed, though hidden scrollbar preferred */
     }
 
     .top-bar::-webkit-scrollbar {
@@ -947,12 +955,9 @@ canvas {
         display: none;
     }
 
-    /* Hide Text */
     .stats-bar {
         display: none;
     }
-
-    /* Hide Stats */
 
     .menu-item {
         padding: 4px 8px;
@@ -960,7 +965,6 @@ canvas {
         white-space: nowrap;
     }
 
-    /* Hide text in undo/redo buttons to save space */
     .history-controls .btn-text {
         display: none;
     }
@@ -973,13 +977,10 @@ canvas {
         display: none;
     }
 
-    /* Hide Minimap */
-
-    /* Toast adjustment */
     .toast-container {
-        top: 55px;
-        right: 10px;
-        left: 10px;
+        top: calc(55px + env(safe-area-inset-top));
+        right: max(10px, env(safe-area-inset-right));
+        left: max(10px, env(safe-area-inset-left));
         align-items: center;
     }
 
@@ -988,7 +989,6 @@ canvas {
         font-size: 11px;
     }
 
-    /* Touch targets */
     .slider {
         height: 16px;
     }
@@ -1000,10 +1000,11 @@ canvas {
 }
 
 /* PORTRAIT (Phones) - Sidebar at Bottom */
-@media (max-width: 768px) and (orientation: portrait) {
+@media (max-width: 1024px) and (orientation: portrait) {
     .sidebar {
         width: 100% !important;
-        height: 50px;
+        height: calc(50px + env(safe-area-inset-bottom));
+        padding-bottom: env(safe-area-inset-bottom);
         top: auto;
         bottom: 0;
         left: 0;
@@ -1011,82 +1012,49 @@ canvas {
         border-top: 1px solid var(--border);
         flex-direction: row;
         justify-content: flex-start;
-        /* Start aligns, scroll handles overflow */
         align-items: center;
-        padding: 0 4px;
+        padding-left: max(4px, env(safe-area-inset-left));
+        padding-right: max(4px, env(safe-area-inset-right));
         overflow-x: auto;
-        /* Enable Horizontal Scroll */
         gap: 2px;
     }
 
-    /* Hide scrollbar */
     .sidebar::-webkit-scrollbar {
         display: none;
     }
 
     .tool-icon {
         width: 44px;
-        /* Slightly wider touch target */
         height: 44px;
-        /* Fit in 50px */
         flex-shrink: 0;
-        /* Prevent squishing */
         border-radius: 8px;
         font-size: 20px;
         margin: 0 2px;
     }
 
     #canvas-container {
-        height: calc(100vh - 50px);
+        height: 100vh;
+        /* Use 100vh, canvas sits behind controls mostly */
     }
+
+    /* Adjust canvas if we want to avoid occlusion? 
+       Actually, standard is full screen canvas.
+    */
 
     .properties-panel {
         left: 0;
         right: 0;
         top: auto;
-        bottom: 50px;
+        bottom: calc(50px + env(safe-area-inset-bottom));
         width: 100%;
         max-height: 45vh;
         border-right: none;
         border-top: 2px solid var(--primary);
         transform: translateY(110%);
         border-radius: 12px 12px 0 0;
+        padding-bottom: env(safe-area-inset-bottom);
     }
 
     .properties-panel.show {
         transform: translateY(0);
     }
-}
-
-/* LANDSCAPE (Phones) - Sidebar at Left (Compact) */
-@media (max-width: 900px) and (orientation: landscape) {
-    .sidebar {
-        width: 48px;
-        top: 48px;
-        padding: 8px 0;
-    }
-
-    .sidebar.expanded {
-        width: 48px;
-    }
-
-    /* Disable expansion */
-
-    .tool-icon {
-        width: 40px;
-        height: 40px;
-        font-size: 18px;
-    }
-
-    .properties-panel {
-        left: 48px;
-        top: 48px;
-        width: 250px;
-        max-height: 100%;
-    }
-
-    #canvas-container {
-        height: 100vh;
-        /* Top bar overlays? No, regular layout flow usually. */
-    }
-}
