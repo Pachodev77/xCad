@@ -928,12 +928,19 @@ canvas {
         height: 48px;
         /* Compact */
         padding: 0 10px;
+        overflow-x: auto;
+        /* Allow scroll if needed, though hidden scrollbar preferred */
+    }
+
+    .top-bar::-webkit-scrollbar {
+        display: none;
     }
 
     .logo-icon {
         width: 28px;
         height: 28px;
         font-size: 16px;
+        flex-shrink: 0;
     }
 
     .logo span {
@@ -946,9 +953,20 @@ canvas {
     }
 
     /* Hide Stats */
+
     .menu-item {
         padding: 4px 8px;
         font-size: 12px;
+        white-space: nowrap;
+    }
+
+    /* Hide text in undo/redo buttons to save space */
+    .history-controls .btn-text {
+        display: none;
+    }
+
+    .history-controls .btn {
+        padding: 4px 8px;
     }
 
     .minimap-container {
@@ -992,15 +1010,30 @@ canvas {
         border-right: none;
         border-top: 1px solid var(--border);
         flex-direction: row;
-        justify-content: space-evenly;
-        padding: 0;
+        justify-content: flex-start;
+        /* Start aligns, scroll handles overflow */
+        align-items: center;
+        padding: 0 4px;
+        overflow-x: auto;
+        /* Enable Horizontal Scroll */
+        gap: 2px;
+    }
+
+    /* Hide scrollbar */
+    .sidebar::-webkit-scrollbar {
+        display: none;
     }
 
     .tool-icon {
-        width: 40px;
-        height: 100%;
-        border-radius: 0;
+        width: 44px;
+        /* Slightly wider touch target */
+        height: 44px;
+        /* Fit in 50px */
+        flex-shrink: 0;
+        /* Prevent squishing */
+        border-radius: 8px;
         font-size: 20px;
+        margin: 0 2px;
     }
 
     #canvas-container {
