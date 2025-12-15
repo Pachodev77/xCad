@@ -43,6 +43,10 @@ export class PaintTool {
         for (let i = 0; i < positions.length; i += 3) {
             const dx = positions[i] - point.x;
             const dz = positions[i + 2] - point.z;
+
+            // Optimization: Bounding box check
+            if (Math.abs(dx) > radius || Math.abs(dz) > radius) continue;
+
             const distSq = dx * dx + dz * dz;
 
             if (distSq < radSq) {
