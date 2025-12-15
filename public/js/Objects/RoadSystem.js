@@ -3,14 +3,23 @@ export class RoadSystem {
         this.scene = scene;
         this.points = []; // Vector3[]
         this.mesh = null;
-        this.previewLine = null;
+        this.params = {
+            width: 8,
+            smoothness: 50,
+            elevation: 0.2
+        };
     }
 
     addPoint(point) {
-        // Raise slighty above terrain
+        // Raise slighty above terrain based on param
         const p = point.clone();
-        p.y += 0.5;
+        p.y += this.params.elevation;
         this.points.push(p);
+        this.updateMesh();
+    }
+
+    setParams(params) {
+        this.params = { ...this.params, ...params };
         this.updateMesh();
     }
 
@@ -34,7 +43,9 @@ export class RoadSystem {
 
         const curve = new THREE.CatmullRomCurve3(this.points);
         // TubeGeometry: path, tubularSegments, radius, radialSegments, closed
-        const geometry = new THREE.TubeGeometry(curve, this.points.length * 10, 2, 8, false);
+        // segments = len * smoothness, radius = width/2
+        const segments = Math.max(10, this.points.length * (this.params.smoothness / 5));
+        const geometry = new THREE.TubeGeometry(curve, segments, this.params.width / 2, 8, false);
         const material = new THREE.MeshStandardMaterial({ color: 0x333333 });
 
         this.mesh = new THREE.Mesh(geometry, material);

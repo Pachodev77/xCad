@@ -4,7 +4,7 @@ export class UIManager {
 
         this.sidebar = document.querySelector('.sidebar');
         this.propertiesPanel = document.querySelector('.properties-panel');
-        this.layersPanel = document.querySelector('.layers-panel');
+        // Layers panel removed
 
         this.initEventListeners();
     }
@@ -66,6 +66,29 @@ export class UIManager {
 
         // Keyboard Shortcuts
         window.addEventListener('keydown', (e) => this.handleShortcuts(e));
+
+        // Context Menu
+        window.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            const menu = document.getElementById('context-menu');
+            if (menu) {
+                menu.style.display = 'block';
+                menu.style.left = `${e.clientX}px`;
+                menu.style.top = `${e.clientY}px`;
+            }
+        });
+
+        window.addEventListener('click', () => {
+            const menu = document.getElementById('context-menu');
+            if (menu) menu.style.display = 'none';
+        });
+
+        // Context Menu Actions
+        document.querySelectorAll('.context-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                this.handleMenuAction(e.currentTarget.dataset.action);
+            });
+        });
 
         this.setupPropertyControls();
     }
@@ -147,6 +170,11 @@ export class UIManager {
                 this.app.activeVegetationType = e.target.dataset.veg;
             });
         });
+
+        // Road Params
+        bindSlider('road-width', (v) => this.app.roadSystem.setParams({ width: v }));
+        bindSlider('road-smooth', (v) => this.app.roadSystem.setParams({ smoothness: v }));
+        bindSlider('road-elevation', (v) => this.app.roadSystem.setParams({ elevation: v }));
     }
 
     handleMenuAction(action) {
