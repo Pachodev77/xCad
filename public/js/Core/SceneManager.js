@@ -68,6 +68,19 @@ export class SceneManager {
         // Hemisphere
         const hemiLight = new THREE.HemisphereLight(0x87ceeb, 0x3a9d3a, 0.3);
         this.scene.add(hemiLight);
+
+        // OrbitControls
+        if (typeof THREE.OrbitControls !== 'undefined') {
+            this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+            this.controls.enableDamping = true;
+            this.controls.dampingFactor = 0.05;
+        } else {
+            console.error('OrbitControls not loaded');
+        }
+    }
+
+    update() {
+        if (this.controls) this.controls.update();
     }
 
     onWindowResize() {
